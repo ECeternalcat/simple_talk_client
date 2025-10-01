@@ -1,0 +1,22 @@
+[2m2025-10-01T07:33:03.251791Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m Database initialized successfully.
+[2m2025-10-01T07:33:03.253879Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m 
+--- Server Started ---
+[2m2025-10-01T07:33:03.253889Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On this machine: http://localhost:3001
+[2m2025-10-01T07:33:03.261640Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://198.18.0.1:3001
+[2m2025-10-01T07:33:03.261676Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://172.23.208.1:3001
+[2m2025-10-01T07:33:03.261678Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://172.30.32.1:3001
+[2m2025-10-01T07:33:03.261679Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://240e:34c:39c:3a50::f4b:3001
+[2m2025-10-01T07:33:03.261686Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://240e:34c:39c:3a50:381a:3868:8900:8de:3001
+[2m2025-10-01T07:33:03.261687Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://240e:34c:39c:3a50:c960:e17e:c180:3d27:3001
+[2m2025-10-01T07:33:03.261689Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://192.168.31.169:3001
+[2m2025-10-01T07:33:03.261690Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://2408:846c:310:1743:6bac:9f09:6ce0:f64a:3001
+[2m2025-10-01T07:33:03.261691Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://2408:846c:310:1743:e0ea:4171:7854:5c35:3001
+[2m2025-10-01T07:33:03.261693Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://2408:846c:310:1743:c196:4a6:f4ff:474d:3001
+[2m2025-10-01T07:33:03.261694Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m   > On local network: http://10.43.22.247:3001
+[2m2025-10-01T07:33:03.261696Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m ----------------------
+
+[2m2025-10-01T07:33:44.779918Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m User '1' (id: 1) connected.
+[2m2025-10-01T07:33:48.411246Z[0m [32m INFO[0m [2msimple_call_client[0m[2m:[0m User '2' (id: 2) connected.
+[2m2025-10-01T07:33:52.646394Z[0m [32m INFO[0m [2msimple_call_client::handler[0m[2m:[0m Received send_friend_request for username: 2
+[2m2025-10-01T07:33:52.646692Z[0m [32m INFO[0m [2msimple_call_client::handler[0m[2m:[0m Found target user: 2 (ID: 2)
+[2m2025-10-01T07:33:52.658731Z[0m [32m INFO[0m [2msimple_call_client::handler[0m[2m:[0m Successfully sent or found friend request in DB. Request ID: 3, Status: accepted

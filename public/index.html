@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Voice Call</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="/js/main.js"></script>
+    <script type="module" src="/js/friends.js"></script>
+</head>
+<body>
+    <div id="container" class="centered">
+        <!-- Login/Register View -->
+        <div id="setup-view">
+            <h1>Voice Call</h1>
+            <p id="message-area" class="message"></p>
+            <div class="form-container">
+                <input type="text" id="username-input" placeholder="Username" autocomplete="username">
+                <input type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+                <div class="button-group">
+                    <button id="login-btn">Login</button>
+                    <button id="register-btn" class="secondary">Register</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main View (contains Chat List and Add Friend) -->
+        <div id="main-view" class="hidden">
+            <div class="list-container">
+                <h3>Chats</h3>
+                <ul id="chat-list"></ul>
+            </div>
+
+            <div class="list-container">
+                <h3>Friends</h3>
+                <ul id="friend-list"></ul>
+            </div>
+
+            <div class="list-container">
+                <h3>Friend Requests</h3>
+                <ul id="friend-request-list"></ul>
+            </div>
+
+            <div class="form-container">
+                <p id="add-friend-message-area" class="message"></p>
+                <input type="text" id="add-friend-username-input" placeholder="Enter friend's username">
+                <button id="add-friend-btn">Add Friend</button>
+            </div>
+
+            <button id="admin-panel-btn" class="hidden">Admin Panel</button>
+            <button id="logout-btn" class="secondary">Logout</button>
+        </div>
+
+        <!-- Call View -->
+        <div id="call-view" class="hidden">
+            <div id="call-container">
+                <div id="voice-panel">
+                    <h2 id="status-text">Connecting...</h2>
+                    <button id="back-to-chats-btn">Back to Chats</button>
+                    <div id="voice-controls" class="hidden">
+                        <button id="mute-mic-btn">Mute Mic</button>
+                    </div>
+                    <button id="start-voice-btn">Start Voice Chat</button>
+                    <p id="device-mode-text"></p>
+                    
+                </div>
+                <div id="chat-panel">
+                    <div id="chat-messages"></div>
+                    <div id="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Type a message...">
+                        <button id="send-chat-btn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel View -->
+        <div id="admin-panel-view" class="hidden">
+            <h2>Admin Panel</h2>
+            <button id="close-admin-panel-btn">Close</button>
+            
+            <div id="admin-user-management">
+                <h3>User Management</h3>
+                <div id="user-list-container"></div>
+                <button id="refresh-users-btn" class="btn-admin btn-safe">Refresh Users</button>
+                <h4>Create New User</h4>
+                <input type="text" id="new-username-input" placeholder="Username">
+                <input type="password" id="new-password-input" placeholder="Password">
+                <select id="new-user-role-select">
+                    <option value="normal">Normal</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button id="create-user-btn" class="btn-admin btn-safe">Create User</button>
+            </div>
+
+            <div id="admin-call-management">
+                <h3>Call Management</h3>
+                <div id="room-list-container"></div>
+                <button id="refresh-rooms-btn" class="btn-admin btn-safe">Refresh Rooms</button>
+            </div>
+
+            <div id="admin-server-management">
+                <h3>Server Management</h3>
+                <button id="shutdown-server-btn" class="btn-admin btn-danger">Shutdown Server</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

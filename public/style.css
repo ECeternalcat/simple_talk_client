@@ -1,0 +1,322 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+#container {
+    transition: all 0.3s ease;
+}
+
+#setup-view, #call-view, #room-view, #admin-panel-view {
+    background-color: white;
+    padding: 2rem 3rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 320px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 5px;
+    transition: background-color 0.2s;
+    flex-grow: 1;
+}
+
+#login-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+#login-btn:hover {
+    background-color: #0056b3;
+}
+
+button.secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+button.secondary:hover {
+    background-color: #5a6268;
+}
+
+input[type="text"], input[type="password"], select {
+    padding: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: calc(100% - 26px);
+    font-size: 16px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.message {
+    min-height: 24px;
+    font-size: 14px;
+    color: #d9534f; /* Default to error color */
+}
+
+.message.success {
+    color: #28a745;
+}
+
+#admin-panel-btn {
+    margin-top: 1rem;
+    background-color: #fd7e14; /* Orange */
+}
+
+#admin-panel-btn:hover {
+    background-color: #e86100;
+}
+
+#admin-panel-view {
+    width: 80vw;
+    max-width: 800px;
+    text-align: left;
+}
+
+#admin-panel-view h3 {
+    margin-top: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+#admin-panel-view table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+#admin-panel-view th, #admin-panel-view td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#admin-panel-view th {
+    background-color: #f2f2f2;
+}
+
+.btn-admin {
+    padding: 5px 10px;
+    font-size: 14px;
+    flex-grow: 0;
+}
+
+.btn-danger {
+    background-color: #d9534f;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c9302c;
+}
+
+.btn-safe {
+    background-color: #5cb85c;
+    color: white;
+}
+
+.btn-safe:hover {
+    background-color: #4cae4c;
+}
+
+
+/* --- Call View Specific Styles --- */
+
+#call-view {
+    width: 80vw;
+    max-width: 900px;
+    height: 80vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#call-container {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+#voice-panel {
+    flex-basis: 300px;
+    flex-shrink: 0;
+    padding: 2rem;
+    border-right: 1px solid #eee;
+    text-align: center;
+}
+
+#voice-controls {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#start-voice-btn, #mute-mic-btn {
+    background-color: #17a2b8;
+    color: white;
+}
+
+#start-voice-btn:hover, #mute-mic-btn:hover {
+    background-color: #138496;
+}
+
+#chat-panel {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+}
+
+#chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.chat-message {
+    margin-bottom: 0.5rem;
+}
+
+.chat-message .username {
+    font-weight: bold;
+}
+
+.chat-message .timestamp {
+    font-size: 0.8em;
+    color: #888;
+    margin-left: 0.5rem;
+}
+
+#chat-input-container {
+    display: flex;
+}
+
+#chat-input {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+#send-chat-btn {
+    flex-grow: 0;
+    width: 100px;
+}
+
+#friends-view {
+    width: 80vw;
+    max-width: 600px;
+    text-align: left;
+}
+
+#chat-list-container {
+    margin-top: 1rem;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    height: 200px;
+    overflow-y: auto;
+}
+
+#chat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chat-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chat-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.chat-name {
+    font-weight: 500;
+}
+
+#friends-view h3 {
+    margin-top: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+#friends-view ul {
+    list-style: none;
+    padding: 0;
+}
+
+#friends-view li {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#add-friend-container {
+    margin-top: 2rem;
+    display: flex;
+}
+
+#add-friend-username-input {
+    flex-grow: 1;
+    margin-right: 1rem;
+    margin-bottom: 0;
+}
+
+.status {
+    font-size: 0.8em;
+    margin-left: 8px;
+}
+
+.status.online {
+    color: #28a745; /* green */
+}
+
+.status.offline {
+    color: #6c757d; /* gray */
+}
+
+/* On smaller screens, make views take up more space */
+@media (max-width: 768px) {
+    #setup-view, #call-view, #admin-panel-view, #friends-view {
+        width: 90%;
+        height: auto;
+        max-height: 90vh;
+    }
+}
