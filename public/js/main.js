@@ -1,13 +1,13 @@
 import { handleAuth } from './auth.js';
 import { initWebSocket, sendWsMessage, setCurrentUser, currentUser, getWebSocket } from './websocket.js';
-import { showMessage, addChatMessage } from './ui.js';
+import { showMessage, addChatMessage, showPage } from './ui.js';
 import { renderChatList } from './chats.js';
 import { renderFriendRequestList, addFriendRequestToList, renderFriendList } from './friends.js';
 import { renderUserList, renderRoomList } from './admin.js';
 import { startAudioCapture, stopAudioCapture, setMute } from './audio.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Views ---
+    // --- Views & Pages ---
     const setupView = document.getElementById('setup-view');
     const mainView = document.getElementById('main-view');
     const callView = document.getElementById('call-view');
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerBtn = document.getElementById('register-btn');
     const addFriendBtn = document.getElementById('add-friend-btn');
     const logoutBtn = document.getElementById('logout-btn');
-    const backToChatsBtn = document.getElementById('back-to-chats-btn');
+    const backToMainBtn = document.getElementById('back-to-main-btn');
     const sendChatBtn = document.getElementById('send-chat-btn');
     const chatInput = document.getElementById('chat-input');
     const chatList = document.getElementById('chat-list');
@@ -30,13 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const voiceControls = document.getElementById('voice-controls');
     const refreshUsersBtn = document.getElementById('refresh-users-btn');
     const refreshRoomsBtn = document.getElementById('refresh-rooms-btn');
-    const newUsernameInput = document.getElementById('new-username-input');
-    const newPasswordInput = document.getElementById('new-password-input');
-    const newUserRoleSelect = document.getElementById('new-user-role-select');
     const createUserBtn = document.getElementById('create-user-btn');
     const shutdownServerBtn = document.getElementById('shutdown-server-btn');
     const userListContainer = document.getElementById('user-list-container');
     const roomListContainer = document.getElementById('room-list-container');
+
+    // --- Nav Buttons ---
+    const navChatsBtn = document.getElementById('nav-chats');
+    const navFriendsBtn = document.getElementById('nav-friends');
+    const navProfileBtn = document.getElementById('nav-profile');
+
+    // --- Profile Page ---
+    const profileUsername = document.getElementById('profile-username');
 
     // --- App State ---
     let isMuted = false;
@@ -61,8 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setCurrentUser(payload);
             setupView.classList.add('hidden');
             mainView.classList.remove('hidden');
+            showPage('chats-page');
 
-            // Show admin button if user is an admin
+            // Set up profile page
+            profileUsername.textContent = payload.username;
             if (payload.role === 'admin') {
                 adminPanelBtn.classList.remove('hidden');
             }
@@ -71,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Room & Chat
         join_ok: (payload) => {
             mainView.classList.add('hidden');
-            adminPanelView.classList.add('hidden');
             callView.classList.remove('hidden');
             document.getElementById('status-text').textContent = `Room ID: ${payload.roomId}`;
             
@@ -82,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const currentRoomId = payload.roomId;
             chatInput.dataset.currentRoomId = currentRoomId;
-            document.getElementById('send-chat-btn').onclick = () => {
+            sendChatBtn.onclick = () => {
                  const content = chatInput.value;
                  if (content) {
                     sendWsMessage('send_chat_message', { roomId: currentRoomId, content });
@@ -91,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
              chatInput.onkeyup = (e) => {
                 if (e.key === 'Enter') {
-                    document.getElementById('send-chat-btn').onclick();
+                    sendChatBtn.onclick();
                 }
             };
         },
@@ -110,11 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
         new_friend_request: (payload) => addFriendRequestToList(payload),
         friend_request_accepted: (payload) => {
             alert(payload);
-            // Backend pushes updated lists to both clients now
         },
         friend_request_rejected: (payload) => {
             alert(payload);
-            // Backend pushes updated list to the client now
         },
         invitation: (payload) => {
             if (confirm(`${payload.from_username} invites you to join the chat.`)) {
@@ -159,6 +163,11 @@ document.addEventListener('DOMContentLoaded', () => {
     loginBtn.addEventListener('click', () => handleAuth('login', handlers));
     registerBtn.addEventListener('click', () => handleAuth('register', handlers));
 
+    // Navigation
+    navChatsBtn.addEventListener('click', () => showPage('chats-page'));
+    navFriendsBtn.addEventListener('click', () => showPage('friends-page'));
+    navProfileBtn.addEventListener('click', () => showPage('profile-page'));
+
     adminPanelBtn.addEventListener('click', () => {
         mainView.classList.add('hidden');
         adminPanelView.classList.remove('hidden');
@@ -173,6 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshRoomsBtn.addEventListener('click', () => sendWsMessage('admin_get_all_rooms'));
 
     createUserBtn.addEventListener('click', () => {
+        const newUsernameInput = document.getElementById('new-username-input');
+        const newPasswordInput = document.getElementById('new-password-input');
+        const newUserRoleSelect = document.getElementById('new-user-role-select');
         const username = newUsernameInput.value;
         const password = newPasswordInput.value;
         const role = newUserRoleSelect.value;
@@ -255,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    backToChatsBtn.addEventListener('click', () => {
+    backToMainBtn.addEventListener('click', () => {
         callView.classList.add('hidden');
         mainView.classList.remove('hidden');
         stopAudioCapture();
@@ -266,21 +278,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const ws = getWebSocket();
         if (!ws) return;
 
-        // 1. Start your own audio first.
         isVoiceActive = await startAudioCapture(ws);
         if (isVoiceActive) {
             voiceControls.classList.remove('hidden');
             startVoiceBtn.classList.add('hidden');
-            // 2. Then, send the invitation to others.
             sendWsMessage('request_voice_chat');
         }
     });
 
     muteMicBtn.addEventListener('click', () => {
         isMuted = !isMuted;
-        setMute(isMuted); // Inform the audio module
+        setMute(isMuted);
         muteMicBtn.textContent = isMuted ? 'Unmute Mic' : 'Mute Mic';
-        console.log("Mute status:", isMuted);
     });
 
     // --- Auto-Login on Page Load ---

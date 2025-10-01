@@ -9,46 +9,71 @@
     <script type="module" src="/js/friends.js"></script>
 </head>
 <body>
-    <div id="container" class="centered">
+    <div id="container">
         <!-- Login/Register View -->
-        <div id="setup-view">
-            <h1>Voice Call</h1>
-            <p id="message-area" class="message"></p>
-            <div class="form-container">
-                <input type="text" id="username-input" placeholder="Username" autocomplete="username">
-                <input type="password" id="password-input" placeholder="Password" autocomplete="current-password">
-                <div class="button-group">
-                    <button id="login-btn">Login</button>
-                    <button id="register-btn" class="secondary">Register</button>
+        <div id="setup-view" class="centered">
+            <div class="form-wrapper">
+                <h1>Voice Call</h1>
+                <p id="message-area" class="message"></p>
+                <div class="form-container">
+                    <input type="text" id="username-input" placeholder="Username" autocomplete="username">
+                    <input type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+                    <div class="button-group">
+                        <button id="login-btn">Login</button>
+                        <button id="register-btn" class="secondary">Register</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main View (contains Chat List and Add Friend) -->
+        <!-- Main View -->
         <div id="main-view" class="hidden">
-            <div class="list-container">
-                <h3>Chats</h3>
-                <ul id="chat-list"></ul>
+            <div id="app-content">
+                <!-- Chats Page -->
+                <div id="chats-page" class="page">
+                    <div class="header"><h3>Chats</h3></div>
+                    <div class="list-container">
+                        <ul id="chat-list"></ul>
+                    </div>
+                </div>
+
+                <!-- Friends Page -->
+                <div id="friends-page" class="page hidden">
+                    <div class="header"><h3>Friends</h3></div>
+                    <div class="list-container">
+                        <ul id="friend-list"></ul>
+                    </div>
+
+                    <div class="header"><h3>Friend Requests</h3></div>
+                    <div class="list-container">
+                        <ul id="friend-request-list"></ul>
+                    </div>
+                    
+                    <div class="header"><h3>Add Friend</h3></div>
+                    <div class="form-container">
+                        <p id="add-friend-message-area" class="message"></p>
+                        <input type="text" id="add-friend-username-input" placeholder="Enter friend's username">
+                        <button id="add-friend-btn">Add Friend</button>
+                    </div>
+                </div>
+
+                <!-- Profile Page -->
+                <div id="profile-page" class="page hidden">
+                    <div class="header"><h3>Profile</h3></div>
+                    <div class="profile-container">
+                        <p>Logged in as: <span id="profile-username"></span></p>
+                        <button id="admin-panel-btn" class="hidden">Admin Panel</button>
+                        <button id="logout-btn" class="secondary">Logout</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="list-container">
-                <h3>Friends</h3>
-                <ul id="friend-list"></ul>
+            <!-- Bottom Navigation Bar -->
+            <div id="bottom-nav">
+                <button id="nav-chats" class="nav-btn active">Chats</button>
+                <button id="nav-friends" class="nav-btn">Friends</button>
+                <button id="nav-profile" class="nav-btn">Profile</button>
             </div>
-
-            <div class="list-container">
-                <h3>Friend Requests</h3>
-                <ul id="friend-request-list"></ul>
-            </div>
-
-            <div class="form-container">
-                <p id="add-friend-message-area" class="message"></p>
-                <input type="text" id="add-friend-username-input" placeholder="Enter friend's username">
-                <button id="add-friend-btn">Add Friend</button>
-            </div>
-
-            <button id="admin-panel-btn" class="hidden">Admin Panel</button>
-            <button id="logout-btn" class="secondary">Logout</button>
         </div>
 
         <!-- Call View -->
@@ -56,13 +81,12 @@
             <div id="call-container">
                 <div id="voice-panel">
                     <h2 id="status-text">Connecting...</h2>
-                    <button id="back-to-chats-btn">Back to Chats</button>
+                    <button id="back-to-main-btn">Back</button>
                     <div id="voice-controls" class="hidden">
                         <button id="mute-mic-btn">Mute Mic</button>
                     </div>
                     <button id="start-voice-btn">Start Voice Chat</button>
                     <p id="device-mode-text"></p>
-                    
                 </div>
                 <div id="chat-panel">
                     <div id="chat-messages"></div>

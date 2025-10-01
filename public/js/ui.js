@@ -19,4 +19,26 @@ function addChatMessage(message) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-export { showMessage, addChatMessage };
+function showPage(pageId) {
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(page => {
+        page.classList.add('hidden');
+    });
+
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    const pageToShow = document.getElementById(pageId);
+    if (pageToShow) {
+        pageToShow.classList.remove('hidden');
+    }
+
+    const correspondingNavBtn = document.getElementById(`nav-${pageId.replace('-page', '')}`);
+    if (correspondingNavBtn) {
+        correspondingNavBtn.classList.add('active');
+    }
+}
+
+export { showMessage, addChatMessage, showPage };
