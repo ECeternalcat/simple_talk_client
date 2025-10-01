@@ -39,6 +39,11 @@ function renderFriendRequestList(requests) {
 
 function addFriendRequestToList(req, isNew = true) {
     const friendRequestList = document.getElementById('friend-request-list');
+    const noRequestsMessage = friendRequestList.querySelector('.no-requests');
+    if (noRequestsMessage) {
+        noRequestsMessage.remove();
+    }
+
     const existingItem = friendRequestList.querySelector(`[data-request-id="${req.id}"]`);
     if (existingItem) return; // Avoid duplicates
 

@@ -66,7 +66,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- WebSocket Message Handlers ---
     const handlers = {
         // Auth
-        register_ok: (payload) => showMessage(document.getElementById('message-area'), t('genericSuccess').replace('{message}', payload), 'success'),
+        register_ok: (payload) => {
+            showMessage(document.getElementById('message-area'), t('genericSuccess').replace('{message}', payload), 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Add a small delay so the user can see the message
+        },
         register_fail: (payload) => showMessage(document.getElementById('message-area'), t('genericError').replace('{message}', payload), 'error'),
         auth_fail: (payload) => {
             isUserAuthenticated = false;
