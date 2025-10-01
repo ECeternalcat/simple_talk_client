@@ -1,69 +1,79 @@
 import { sendWsMessage } from './websocket.js';
+import { t } from './i18n.js';
 
-function addFriendRequestToList(req) {
-    const friendRequestList = document.getElementById('friend-request-list');
+function renderFriendList(friends) {
+    const friendList = document.getElementById('friend-list');
+    friendList.innerHTML = ''; // Clear existing list
+    if (friends && friends.length > 0) {
+        friends.forEach(friend => {
+            const friendItem = document.createElement('li');
+            friendItem.className = 'friend-list-item';
+            friendItem.dataset.friendId = friend.id;
+            friendItem.dataset.friendUsername = friend.username;
 
-    // Remove the 'no new requests' message if it exists
-    const placeholder = friendRequestList.querySelector('.no-requests-placeholder');
-    if (placeholder) {
-        placeholder.remove();
+            friendItem.innerHTML = `
+                <div class="friend-name">
+                    ${friend.username}
+                    <span class="status ${friend.is_online ? 'online' : 'offline'}">
+                        ${friend.is_online ? t('statusOnline') : t('statusOffline')}
+                    </span>
+                </div>
+                <button class="delete-friend-btn btn-danger btn-small">${t('removeButton')}</button>
+            `;
+            friendList.appendChild(friendItem);
+        });
     }
-
-    const li = document.createElement('li');
-    li.id = `friend-request-${req.id}`;
-    li.innerHTML = `
-        <span>${req.from_username}</span>
-        <div>
-            <button class="accept-friend-btn btn-admin btn-safe" data-requestid="${req.id}">Accept</button>
-            <button class="reject-friend-btn btn-admin btn-danger" data-requestid="${req.id}">Reject</button>
-        </div>
-    `;
-    friendRequestList.prepend(li); // Add to the top of the list
-
-    // Re-add event listeners to the new buttons
-    li.querySelector('.accept-friend-btn').addEventListener('click', (e) => {
-        const requestId = parseInt(e.target.dataset.requestid, 10);
-        sendWsMessage('respond_to_friend_request', { requestId, accept: true });
-    });
-
-    li.querySelector('.reject-friend-btn').addEventListener('click', (e) => {
-        const requestId = parseInt(e.target.dataset.requestid, 10);
-        sendWsMessage('respond_to_friend_request', { requestId, accept: false });
-    });
 }
 
 function renderFriendRequestList(requests) {
     const friendRequestList = document.getElementById('friend-request-list');
-    friendRequestList.innerHTML = '';
-    if (requests.length === 0) {
-        friendRequestList.innerHTML = '<li class="no-requests-placeholder">No new friend requests.</li>';
-        return;
+    friendRequestList.innerHTML = ''; // Clear existing list
+    if (requests && requests.length > 0) {
+        requests.forEach(req => addFriendRequestToList(req, false));
     }
-    requests.forEach(addFriendRequestToList);
 }
 
-function renderFriendList(friends) {
-    const friendList = document.getElementById('friend-list');
-    friendList.innerHTML = '';
-    if (friends.length === 0) {
-        friendList.innerHTML = '<li>You have no friends yet.</li>';
-        return;
+function addFriendRequestToList(req, isNew = true) {
+    const friendRequestList = document.getElementById('friend-request-list');
+    const existingItem = friendRequestList.querySelector(`[data-request-id="${req.id}"]`);
+    if (existingItem) return; // Avoid duplicates
+
+    const requestItem = document.createElement('li');
+    requestItem.dataset.requestId = req.id;
+
+    let buttonsHtml;
+    if (req.status === 'pending') {
+        if (req.is_sender) {
+            buttonsHtml = `<span class="request-status">${t('friendRequestSent')}</span>`;
+        } else {
+            buttonsHtml = `
+                <button class="accept-friend-btn btn-safe btn-small">${t('acceptButton')}</button>
+                <button class="reject-friend-btn btn-danger btn-small">${t('rejectButton')}</button>
+            `;
+        }
+    } 
+
+    requestItem.innerHTML = `
+        <span>${req.username}</span>
+        <div class="button-group">${buttonsHtml}</div>
+    `;
+
+    if (isNew) {
+        friendRequestList.prepend(requestItem);
+    } else {
+        friendRequestList.appendChild(requestItem);
     }
 
-    friends.forEach(friend => {
-        const li = document.createElement('li');
-        li.className = 'friend-list-item';
-        li.dataset.friendId = friend.id;
-        li.dataset.friendUsername = friend.username;
-        li.innerHTML = `
-            <span class="friend-name">${friend.username}</span>
-            <div class="friend-controls">
-                <span class="status ${friend.is_online ? 'online' : 'offline'}"></span>
-                <button class="delete-friend-btn btn-admin btn-danger" data-friend-id="${friend.id}">Delete</button>
-            </div>
-        `;
-        friendList.appendChild(li);
-    });
+    if (req.status === 'pending' && !req.is_sender) {
+        requestItem.querySelector('.accept-friend-btn').addEventListener('click', () => {
+            sendWsMessage('accept_friend_request', { requestId: req.id });
+            requestItem.remove();
+        });
+        requestItem.querySelector('.reject-friend-btn').addEventListener('click', () => {
+            sendWsMessage('reject_friend_request', { requestId: req.id });
+            requestItem.remove();
+        });
+    }
 }
 
-export { renderFriendRequestList, addFriendRequestToList, renderFriendList };
+export { renderFriendList, renderFriendRequestList, addFriendRequestToList };

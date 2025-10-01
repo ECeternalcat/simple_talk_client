@@ -1,9 +1,11 @@
+import { t } from './i18n.js';
+
 function renderUserList(users) {
     const userListContainer = document.getElementById('user-list-container');
     if (!userListContainer) return;
 
     if (!users || users.length === 0) {
-        userListContainer.innerHTML = '<p>No users found.</p>';
+        userListContainer.innerHTML = `<p>${t('noUsersFound')}</p>`;
         return;
     }
 
@@ -12,20 +14,20 @@ function renderUserList(users) {
     table.innerHTML = `
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Actions</th>
+                <th>${t('tableHeaderId')}</th>
+                <th>${t('tableHeaderUsername')}</th>
+                <th>${t('tableHeaderRole')}</th>
+                <th>${t('tableHeaderActions')}</th>
             </tr>
         </thead>
         <tbody>
             ${users.map(user => `
                 <tr>
-                    <td data-label="ID">${user._id}</td>
-                    <td data-label="Username">${user.username}</td>
-                    <td data-label="Role">${user.role}</td>
-                    <td data-label="Actions">
-                        <button class="btn-admin btn-danger btn-small" data-action="delete-user" data-user-id="${user._id}" data-username="${user.username}">Delete</button>
+                    <td data-label="${t('tableHeaderId')}">${user._id}</td>
+                    <td data-label="${t('tableHeaderUsername')}">${user.username}</td>
+                    <td data-label="${t('tableHeaderRole')}">${user.role}</td>
+                    <td data-label="${t('tableHeaderActions')}">
+                        <button class="btn-admin btn-danger btn-small" data-action="delete-user" data-user-id="${user._id}" data-username="${user.username}">${t('deleteButton')}</button>
                     </td>
                 </tr>
             `).join('')}
@@ -40,7 +42,7 @@ function renderRoomList(rooms) {
     if (!roomListContainer) return;
 
     if (!rooms || rooms.length === 0) {
-        roomListContainer.innerHTML = '<p>No active rooms found.</p>';
+        roomListContainer.innerHTML = `<p>${t('noActiveRooms')}</p>`;
         return;
     }
 
@@ -49,22 +51,22 @@ function renderRoomList(rooms) {
     table.innerHTML = `
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Participants</th>
-                <th>Created At</th>
-                <th>Actions</th>
+                <th>${t('tableHeaderId')}</th>
+                <th>${t('tableHeaderType')}</th>
+                <th>${t('tableHeaderParticipants')}</th>
+                <th>${t('tableHeaderCreatedAt')}</th>
+                <th>${t('tableHeaderActions')}</th>
             </tr>
         </thead>
         <tbody>
             ${rooms.map(room => `
                 <tr>
-                    <td data-label="ID">${room.id}</td>
-                    <td data-label="Type">${room.is_private ? 'Private' : 'Group'}</td>
-                    <td data-label="Participants">${room.participants.join(', ')}</td>
-                    <td data-label="Created At">${new Date(room.created_at).toLocaleString()}</td>
-                    <td data-label="Actions">
-                        <button class="btn-admin btn-danger btn-small" data-action="delete-room" data-room-id="${room.id}">Delete</button>
+                    <td data-label="${t('tableHeaderId')}">${room.id}</td>
+                    <td data-label="${t('tableHeaderType')}">${room.is_private ? 'Private' : 'Group'}</td>
+                    <td data-label="${t('tableHeaderParticipants')}">${room.participants.join(', ')}</td>
+                    <td data-label="${t('tableHeaderCreatedAt')}">${new Date(room.created_at).toLocaleString()}</td>
+                    <td data-label="${t('tableHeaderActions')}">
+                        <button class="btn-admin btn-danger btn-small" data-action="delete-room" data-room-id="${room.id}">${t('deleteButton')}</button>
                     </td>
                 </tr>
             `).join('')}

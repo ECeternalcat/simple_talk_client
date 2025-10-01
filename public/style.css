@@ -195,6 +195,16 @@ input[type="text"], input[type="password"], select {
     font-weight: 500;
 }
 
+.chat-members {
+    font-size: 0.8em;
+    color: #888;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 10px;
+}
+
 .status {
     font-size: 0.8em;
     margin-left: 8px;
@@ -220,6 +230,27 @@ input[type="text"], input[type="password"], select {
     max-width: 300px;
     display: block;
     margin: 10px auto;
+}
+
+.language-selector-container {
+    margin: 2rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.language-selector-container label {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+#language-selector {
+    font-size: 1rem;
+    padding: 8px;
+    border-radius: 5px;
+    width: auto;
+    min-width: 120px;
 }
 
 
@@ -382,6 +413,16 @@ input[type="text"], input[type="password"], select {
 .accordion-content h4 {
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
+}
+
+.accordion-content .form-container.vertical > * {
+    margin-bottom: 10px;
+}
+
+.accordion-content hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
 }
 
 .responsive-table {

@@ -6,7 +6,9 @@ use axum::Router;
 use futures_util::{stream::StreamExt, SinkExt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
 use std::net::SocketAddr;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tower_http::services::ServeDir;
@@ -19,6 +21,34 @@ mod handler;
 pub type RoomId = i64;
 
 // --- Core Application Structs ---
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Config {
+    pub port: u16,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config { port: 3001 }
+    }
+}
+
+fn load_config() -> Config {
+    let path = Path::new("config.json");
+    if !path.exists() {
+        let config = Config::default();
+        if let Ok(json) = serde_json::to_string_pretty(&config) {
+            fs::write(path, json).expect("Failed to write default config file.");
+        }
+        return config;
+    }
+
+    let file_content = fs::read_to_string(path).expect("Failed to read config file.");
+    serde_json::from_str(&file_content).unwrap_or_else(|e| {
+        tracing::error!("Failed to parse config.json: {}. Using default config.", e);
+        Config::default()
+    })
+}
 
 #[derive(Default)]
 pub struct Room {
@@ -33,7 +63,7 @@ pub struct AppState {
     pub rooms: Mutex<HashMap<RoomId, Room>>,
     pub online_users: Mutex<HashMap<i32, mpsc::UnboundedSender<Message>>>, // user_id -> sender
     pub db_pool: db::Pool,
-    pub shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
+    pub shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>
 }
 
 // --- WebSocket Message Structures ---
@@ -111,7 +141,6 @@ pub struct DeleteFriendPayload {
 pub struct InvitationPayload {
     pub from_username: String,
     pub room_id: RoomId,
-    pub room_name: String, // The name of the other user
 }
 
 #[derive(Serialize, Clone)]
@@ -136,6 +165,11 @@ pub struct AdminDeleteRoomPayload {
     pub room_id: i64,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct AdminChangePortPayload {
+    pub port: u16,
+}
+
 #[derive(Serialize)]
 pub struct FriendInfo {
     pub id: i32,
@@ -154,6 +188,7 @@ async fn main() -> anyhow::Result<()> {
     db::init_db()?;
     println!("Database initialized successfully.");
 
+    let config = load_config();
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
 
     let shared_state = Arc::new(AppState {
@@ -167,14 +202,16 @@ async fn main() -> anyhow::Result<()> {
         .route("/ws", get(ws_handler))
         .with_state(shared_state.clone());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await?;
-    let port = listener.local_addr()?.port();
+    let addr = format!("0.0.0.0:{}", config.port);
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    let actual_port = listener.local_addr()?.port();
     println!("\n--- Server Started ---");
-    println!("  > On this machine: http://localhost:{}", port);
+    println!("  > Listening on: {}", addr);
+    println!("  > On this machine: http://localhost:{}", actual_port);
     if let Ok(ifaces) = get_if_addrs::get_if_addrs() {
         for iface in ifaces {
             if !iface.is_loopback() {
-                println!("  > On local network: http://{}:{}", iface.ip(), port);
+                println!("  > On local network: http://{}:{}", iface.ip(), actual_port);
             }
         }
     }
@@ -186,9 +223,11 @@ async fn main() -> anyhow::Result<()> {
     )
     .with_graceful_shutdown(async {
         shutdown_rx.await.ok();
+        println!("Graceful shutdown initiated...");
     })
     .await?;
 
+    println!("Server has shut down.");
     Ok(())
 }
 

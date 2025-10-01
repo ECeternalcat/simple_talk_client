@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Voice Call</title>
+    <title data-i18n="appTitle">Simple Voice Call</title>
     <link rel="stylesheet" href="style.css">
     <script type="module" src="/js/main.js"></script>
     <script type="module" src="/js/friends.js"></script>
@@ -13,14 +13,14 @@
         <!-- Login/Register View -->
         <div id="setup-view" class="centered">
             <div class="form-wrapper">
-                <h1>Voice Call</h1>
+                <h1 data-i18n="loginViewTitle">Voice Call</h1>
                 <p id="message-area" class="message"></p>
                 <div class="form-container">
-                    <input type="text" id="username-input" placeholder="Username" autocomplete="username">
-                    <input type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+                    <input type="text" id="username-input" data-i18n-placeholder="usernamePlaceholder" placeholder="Username" autocomplete="username">
+                    <input type="password" id="password-input" data-i18n-placeholder="passwordPlaceholder" placeholder="Password" autocomplete="current-password">
                     <div class="button-group">
-                        <button id="login-btn">Login</button>
-                        <button id="register-btn" class="secondary">Register</button>
+                        <button id="login-btn" data-i18n="loginButton">Login</button>
+                        <button id="register-btn" class="secondary" data-i18n="registerButton">Register</button>
                     </div>
                 </div>
             </div>
@@ -31,7 +31,7 @@
             <div id="app-content">
                 <!-- Chats Page -->
                 <div id="chats-page" class="page">
-                    <div class="header"><h3>Chats</h3></div>
+                    <div class="header"><h3 data-i18n="chatsTitle">Chats</h3></div>
                     <div class="list-container">
                         <ul id="chat-list"></ul>
                     </div>
@@ -39,40 +39,49 @@
 
                 <!-- Friends Page -->
                 <div id="friends-page" class="page hidden">
-                    <div class="header"><h3>Friends</h3></div>
+                    <div class="header"><h3 data-i18n="friendsTitle">Friends</h3></div>
                     <div class="list-container">
                         <ul id="friend-list"></ul>
                     </div>
 
-                    <div class="header"><h3>Friend Requests</h3></div>
+                    <div class="header"><h3 data-i18n="friendRequestsTitle">Friend Requests</h3></div>
                     <div class="list-container">
                         <ul id="friend-request-list"></ul>
                     </div>
                     
-                    <div class="header"><h3>Add Friend</h3></div>
+                    <div class="header"><h3 data-i18n="addFriendTitle">Add Friend</h3></div>
                     <div class="form-container">
                         <p id="add-friend-message-area" class="message"></p>
-                        <input type="text" id="add-friend-username-input" placeholder="Enter friend's username">
-                        <button id="add-friend-btn">Add Friend</button>
+                        <input type="text" id="add-friend-username-input" data-i18n-placeholder="addFriendPlaceholder" placeholder="Enter friend's username">
+                        <button id="add-friend-btn" data-i18n="addFriendButton">Add Friend</button>
                     </div>
                 </div>
 
                 <!-- Profile Page -->
                 <div id="profile-page" class="page hidden">
-                    <div class="header"><h3>Profile</h3></div>
+                    <div class="header"><h3 data-i18n="profileTitle">Profile</h3></div>
                     <div class="profile-container">
-                        <p>Logged in as: <span id="profile-username"></span></p>
-                        <button id="admin-panel-btn" class="hidden">Admin Panel</button>
-                        <button id="logout-btn" class="secondary">Logout</button>
+                        <p><span data-i18n="loggedInAs">Logged in as:</span> <span id="profile-username"></span></p>
+                        
+                        <div class="language-selector-container">
+                            <label for="language-selector" data-i18n="languageLabel">Language</label>
+                            <select id="language-selector">
+                                <option value="en">English</option>
+                                <option value="zh">中文</option>
+                            </select>
+                        </div>
+
+                        <button id="admin-panel-btn" class="hidden" data-i18n="adminPanelButton">Admin Panel</button>
+                        <button id="logout-btn" class="secondary" data-i18n="logoutButton">Logout</button>
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Navigation Bar -->
             <div id="bottom-nav">
-                <button id="nav-chats" class="nav-btn active">Chats</button>
-                <button id="nav-friends" class="nav-btn">Friends</button>
-                <button id="nav-profile" class="nav-btn">Profile</button>
+                <button id="nav-chats" class="nav-btn active" data-i18n="chatsNav">Chats</button>
+                <button id="nav-friends" class="nav-btn" data-i18n="friendsNav">Friends</button>
+                <button id="nav-profile" class="nav-btn" data-i18n="profileNav">Profile</button>
             </div>
         </div>
 
@@ -80,19 +89,19 @@
         <div id="call-view" class="hidden">
             <div id="call-container">
                 <div id="voice-panel">
-                    <h2 id="status-text">Connecting...</h2>
-                    <button id="back-to-main-btn">Back</button>
+                    <h2 id="status-text" data-i18n="connectingStatus">Connecting...</h2>
+                    <button id="back-to-main-btn" data-i18n="backButton">Back</button>
                     <div id="voice-controls" class="hidden">
-                        <button id="mute-mic-btn">Mute Mic</button>
+                        <button id="mute-mic-btn" data-i18n="muteMicButton">Mute Mic</button>
                     </div>
-                    <button id="start-voice-btn">Start Voice Chat</button>
+                    <button id="start-voice-btn" data-i18n="startVoiceChatButton">Start Voice Chat</button>
                     <p id="device-mode-text"></p>
                 </div>
                 <div id="chat-panel">
                     <div id="chat-messages"></div>
                     <div id="chat-input-container">
-                        <input type="text" id="chat-input" placeholder="Type a message...">
-                        <button id="send-chat-btn">Send</button>
+                        <input type="text" id="chat-input" data-i18n-placeholder="chatInputPlaceholder" placeholder="Type a message...">
+                        <button id="send-chat-btn" data-i18n="sendButton">Send</button>
                     </div>
                 </div>
             </div>
@@ -102,48 +111,54 @@
         <div id="admin-panel-view" class="hidden">
             <div class="admin-panel-content">
                 <div class="admin-panel-header">
-                    <h2>Admin Panel</h2>
+                    <h2 data-i18n="adminPanelTitle">Admin Panel</h2>
                     <button id="close-admin-panel-btn">&times;</button>
                 </div>
 
                 <div class="accordion">
                     <div class="accordion-item">
                         <button class="accordion-header">
-                            User Management
+                            <span data-i18n="userManagement">User Management</span>
                             <span class="accordion-icon">+</span>
                         </button>
                         <div class="accordion-content">
                             <div id="user-list-container"></div>
-                            <button id="refresh-users-btn" class="btn-admin btn-safe">Refresh Users</button>
-                            <h4>Create New User</h4>
-                            <input type="text" id="new-username-input" placeholder="Username">
-                            <input type="password" id="new-password-input" placeholder="Password">
+                            <button id="refresh-users-btn" class="btn-admin btn-safe" data-i18n="refreshUsersButton">Refresh Users</button>
+                            <h4 data-i18n="createNewUserTitle">Create New User</h4>
+                            <input type="text" id="new-username-input" data-i18n-placeholder="usernamePlaceholder" placeholder="Username">
+                            <input type="password" id="new-password-input" data-i18n-placeholder="passwordPlaceholder" placeholder="Password">
                             <select id="new-user-role-select">
-                                <option value="normal">Normal</option>
-                                <option value="admin">Admin</option>
+                                <option value="normal" data-i18n="userRoleNormal">Normal</option>
+                                <option value="admin" data-i18n="userRoleAdmin">Admin</option>
                             </select>
-                            <button id="create-user-btn" class="btn-admin btn-safe">Create User</button>
+                            <button id="create-user-btn" class="btn-admin btn-safe" data-i18n="createUserButton">Create User</button>
                         </div>
                     </div>
 
                     <div class="accordion-item">
                         <button class="accordion-header">
-                            Call Management
+                            <span data-i18n="callManagement">Call Management</span>
                             <span class="accordion-icon">+</span>
                         </button>
                         <div class="accordion-content">
                             <div id="room-list-container"></div>
-                            <button id="refresh-rooms-btn" class="btn-admin btn-safe">Refresh Rooms</button>
+                            <button id="refresh-rooms-btn" class="btn-admin btn-safe" data-i18n="refreshRoomsButton">Refresh Rooms</button>
                         </div>
                     </div>
 
                     <div class="accordion-item">
                         <button class="accordion-header">
-                            Server Management
+                            <span data-i18n="serverManagement">Server Management</span>
                             <span class="accordion-icon">+</span>
                         </button>
                         <div class="accordion-content">
-                            <button id="shutdown-server-btn" class="btn-admin btn-danger">Shutdown Server</button>
+                            <div class="form-container vertical">
+                                <h4>Change Server Port</h4>
+                                <input type="number" id="new-port-input" data-i18n-placeholder="newPortPlaceholder" placeholder="Enter new port (e.g., 8080)">
+                                <button id="change-port-btn" class="btn-admin btn-safe" data-i18n="changePortButton">Change Port</button>
+                            </div>
+                            <hr>
+                            <button id="shutdown-server-btn" class="btn-admin btn-danger" data-i18n="shutdownServerButton">Shutdown Server</button>
                         </div>
                     </div>
                 </div>

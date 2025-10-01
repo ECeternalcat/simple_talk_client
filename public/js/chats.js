@@ -1,61 +1,46 @@
-import { sendWsMessage } from './websocket.js';
+import { t } from './i18n.js';
+import { currentUser } from './websocket.js';
 
 function renderChatList(chats) {
     const chatList = document.getElementById('chat-list');
-    chatList.innerHTML = '';
-    if (chats.length === 0) {
-        chatList.innerHTML = '<li>No active chats. Add a friend to start one!</li>';
+    chatList.innerHTML = ''; // Clear the list
+
+    if (!chats || chats.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.textContent = t('noActiveChats');
+        chatList.appendChild(emptyItem);
         return;
     }
 
     chats.forEach(chat => {
-        const li = document.createElement('li');
-        li.className = 'chat-list-item';
-        li.dataset.roomId = chat.room_id;
+        const chatItem = document.createElement('li');
+        chatItem.className = 'chat-list-item';
+        chatItem.dataset.roomId = chat.room_id;
 
-        const statusClass = chat.is_online ? 'online' : 'offline';
+        let displayName = chat.name; // Prioritize server-given name
+        let participants = Array.isArray(chat.participants) ? chat.participants : [];
 
-        li.innerHTML = `
-            <span class="chat-name">${chat.room_name}</span>
-            <span class="status ${statusClass}">●</span>
+        // If no name is given by the server, generate one from participants
+        if (!displayName && currentUser) {
+            const otherParticipants = participants.filter(p => p !== currentUser.username);
+            if (otherParticipants.length > 0) {
+                displayName = otherParticipants.join(', ');
+            } else if (participants.length === 1) {
+                // It's a chat with only the user themselves
+                displayName = participants[0]; // Just show their own name
+            } else {
+                displayName = t('unnamedChat'); // Fallback
+            }
+        }
+
+        const membersString = participants.length > 0 ? t('chatMembers').replace('{members}', participants.join(', ')) : '';
+
+        chatItem.innerHTML = `
+            <div class="chat-name">${displayName || t('Unnamed Chat')}</div>
+            <div class="chat-members">${membersString}</div>
         `;
-        chatList.appendChild(li);
+        chatList.appendChild(chatItem);
     });
 }
 
-function renderFriendRequestList(requests) {
-    const friendRequestList = document.getElementById('friend-request-list');
-    friendRequestList.innerHTML = '';
-    if (requests.length === 0) {
-        friendRequestList.innerHTML = '<li>No new friend requests.</li>';
-        return;
-    }
-
-    requests.forEach(req => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <span>${req.from_username} wants to be your friend.</span>
-            <div>
-                <button class="accept-friend-btn btn-admin btn-safe" data-requestid="${req.id}">Accept</button>
-                <button class="reject-friend-btn btn-admin btn-danger" data-requestid="${req.id}">Reject</button>
-            </div>
-        `;
-        friendRequestList.appendChild(li);
-    });
-
-    document.querySelectorAll('.accept-friend-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const requestId = parseInt(e.target.dataset.requestid, 10);
-            sendWsMessage('respond_to_friend_request', { requestId, accept: true });
-        });
-    });
-
-    document.querySelectorAll('.reject-friend-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const requestId = parseInt(e.target.dataset.requestid, 10);
-            sendWsMessage('respond_to_friend_request', { requestId, accept: false });
-        });
-    });
-}
-
-export { renderChatList, renderFriendRequestList };
+export { renderChatList };

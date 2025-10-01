@@ -1,5 +1,6 @@
 import { showMessage } from './ui.js';
 import { initWebSocket, sendWsMessage } from './websocket.js';
+import { t } from './i18n.js';
 
 function handleAuth(action, handlers) {
     const usernameInput = document.getElementById('username-input');
@@ -9,7 +10,7 @@ function handleAuth(action, handlers) {
     const username = usernameInput.value;
     const password = passwordInput.value;
     if (!username || !password) {
-        showMessage(messageArea, 'Username and password cannot be empty.');
+        showMessage(messageArea, t('authEmptyFields'));
         return;
     }
     

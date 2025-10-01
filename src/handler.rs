@@ -1,8 +1,9 @@
-use crate::{db, send_ws_message_to, AppState, Client, InvitationPayload, JoinRoomPayload, QuickChatPayload, RoomId, WsRequestMessage, ChatMessagePayload, SendFriendRequestPayload, RespondToFriendRequestPayload, AdminCreateUserPayload, AdminDeleteUserPayload, AdminDeleteRoomPayload, DeleteFriendPayload};
+use crate::{db, send_ws_message_to, AppState, Client, InvitationPayload, JoinRoomPayload, QuickChatPayload, RoomId, WsRequestMessage, ChatMessagePayload, SendFriendRequestPayload, RespondToFriendRequestPayload, AdminCreateUserPayload, AdminDeleteUserPayload, AdminDeleteRoomPayload, DeleteFriendPayload, AdminChangePortPayload, load_config};
 use axum::extract::ws::Message;
 use rusqlite::params;
 use std::sync::Arc;
 use tokio::sync::mpsc;
+use std::fs;
 
 // --- Standalone Handlers (called from main) ---
 
@@ -15,25 +16,9 @@ pub async fn handle_get_user_rooms(
     let conn = state.db_pool.get().unwrap();
     match db::get_user_rooms(&conn, user._id) {
         Ok(rooms) => {
-            let online_users = state.online_users.lock().unwrap();
-            let chat_list: Vec<db::RoomInfo> = rooms
-                .into_iter()
-                .map(|(room_id, room_name)| db::RoomInfo {
-                    room_id,
-                    room_name,
-                    // Check if the other user is online.
-                    // This is a bit inefficient, a user_id map would be better.
-                    is_online: conn.query_row(
-                        "SELECT u.id FROM users u JOIN room_participants rp ON u.id = rp.user_id WHERE rp.room_id = ?1 AND rp.user_id != ?2",
-                        params![room_id, user._id],
-                        |row| row.get::<_, i32>(0)
-                    ).ok().map_or(false, |id| online_users.contains_key(&id))
-                })
-                .collect();
-
             let resp = crate::WsResponseMessage {
                 r#type: "chat_list".to_string(),
-                payload: serde_json::json!(chat_list),
+                payload: serde_json::json!(rooms),
             };
             let _ = own_tx.send(Message::Text(serde_json::to_string(&resp).unwrap()));
         }
@@ -192,7 +177,6 @@ pub async fn handle_message(
                                 let invitation = InvitationPayload {
                                     from_username: user.username.clone(),
                                     room_id,
-                                    room_name: user.username.clone(), // The room is named after the inviting user
                                 };
                                 send_ws_message_to(&friend_tx, "invitation", invitation).await;
                             }
@@ -229,7 +213,7 @@ pub async fn handle_message(
                     if let Some(info) = info_to_send {
                         match info.status.as_str() {
                             "pending" => {
-                                send_ws_message_to(own_tx, "friend_request_sent", "Friend request sent.").await;
+                                send_ws_message_to(own_tx, "friend_request_sent", &serde_json::json!({ "username": p.username })).await;
 
                                 let friend_tx = {
                                     let online_users_map = state.online_users.lock().unwrap();
@@ -241,78 +225,58 @@ pub async fn handle_message(
                                 }
                             }
                             "accepted" => {
-                                send_ws_message_to(own_tx, "friend_request_fail", "You are already friends with this user.").await;
+                                send_ws_message_to(own_tx, "friend_request_fail", &serde_json::json!({ "error": "You are already friends with this user." })).await;
                             }
                             _ => {
-                                send_ws_message_to(own_tx, "friend_request_fail", "Cannot send friend request at this time.").await;
+                                send_ws_message_to(own_tx, "friend_request_fail", &serde_json::json!({ "error": "Cannot send friend request at this time." })).await;
                             }
                         }
                     }
                 } else {
-                    send_ws_message_to(own_tx, "friend_request_fail", "User not found, or you cannot send a request to yourself.").await;
+                    send_ws_message_to(own_tx, "friend_request_fail", &serde_json::json!({ "error": "User not found, or you cannot send a request to yourself." })).await;
                 }
             }
         }
         "respond_to_friend_request" => {
             if let Ok(p) = serde_json::from_value::<RespondToFriendRequestPayload>(req.payload.clone()) {
+                let mut conn = state.db_pool.get().unwrap();
                 if p.accept {
-                    let (op_success, sender_id, sender_user) = {
-                        let mut conn = state.db_pool.get().unwrap();
-                        let sender_id_res: Result<i32, _> = conn.query_row(
-                            "SELECT from_user_id FROM friend_requests WHERE id = ?1",
-                            params![p.request_id],
-                            |row| row.get(0),
-                        );
+                    match db::accept_friend_request(&mut conn, p.request_id) {
+                        Ok(Some(sender_id)) => {
+                            let sender_username: String = conn.query_row("SELECT username FROM users WHERE id = ?1", params![sender_id], |r| r.get(0)).unwrap_or_default();
+                            // --- Notify self (the acceptor) ---
+                            send_ws_message_to(own_tx, "friend_request_accepted", &serde_json::json!({ "from_username": sender_username })).await;
+                            handle_get_user_rooms(state.clone(), user, own_tx).await;
+                            handle_get_friend_requests(state.clone(), user, own_tx).await;
+                            handle_get_friend_list(state.clone(), user, own_tx).await;
 
-                        if let Ok(sender_id) = sender_id_res {
-                            if db::accept_friend_request(&mut conn, p.request_id).is_ok() {
-                                let sender_user_res = conn.query_row(
-                                    "SELECT id, username, password_hash, role FROM users WHERE id = ?1",
-                                    params![sender_id],
-                                    |row| Ok(db::User { _id: row.get(0)?, username: row.get(1)?, password_hash: row.get(2)?, role: row.get(3)? })
-                                );
-                                (true, Some(sender_id), sender_user_res.ok())
-                            } else {
-                                (false, None, None) // accept_friend_request failed
-                            }
-                        } else {
-                            (false, None, None) // query_row for sender_id failed
-                        }
-                    };
-
-                    if op_success {
-                        // --- Notify self (the acceptor) ---
-                        send_ws_message_to(own_tx, "friend_request_accepted", "Friend request accepted. A new chat has been created.").await;
-                        handle_get_user_rooms(state.clone(), user, own_tx).await;
-                        handle_get_friend_requests(state.clone(), user, own_tx).await;
-                        handle_get_friend_list(state.clone(), user, own_tx).await;
-
-                        // --- Notify the original sender ---
-                        if let (Some(id), Some(s_user)) = (sender_id, sender_user) {
-                            let sender_tx = {
-                                let online_users = state.online_users.lock().unwrap();
-                                online_users.get(&id).cloned()
-                            };
-
+                            // --- Notify the original sender ---
+                            let sender_tx = { state.online_users.lock().unwrap().get(&sender_id).cloned() };
                             if let Some(s_tx) = sender_tx {
-                                tracing::info!("Notifying original sender '{}' of accepted request.", s_user.username);
-                                handle_get_user_rooms(state.clone(), &s_user, &s_tx).await;
-                                handle_get_friend_list(state.clone(), &s_user, &s_tx).await;
+                                let sender_user: db::User = conn.query_row("SELECT id, username, password_hash, role FROM users WHERE id = ?1", params![sender_id], |row| Ok(db::User { _id: row.get(0)?, username: row.get(1)?, password_hash: row.get(2)?, role: row.get(3)? })).unwrap();
+                                tracing::info!("Notifying original sender '{}' of accepted request.", sender_user.username);
+                                send_ws_message_to(&s_tx, "friend_request_accepted", &serde_json::json!({ "from_username": user.username })).await;
+                                handle_get_user_rooms(state.clone(), &sender_user, &s_tx).await;
+                                handle_get_friend_list(state.clone(), &sender_user, &s_tx).await;
                             }
                         }
-                    } else {
-                        send_ws_message_to(own_tx, "friend_request_fail", "Database operation failed.").await;
+                        Ok(None) => { tracing::error!("accept_friend_request completed but returned no sender_id"); }
+                        Err(e) => { send_ws_message_to(own_tx, "friend_request_fail", &serde_json::json!({ "error": e.to_string() })).await; }
                     }
                 } else {
-                    let conn = state.db_pool.get().unwrap();
                     match db::reject_friend_request(&conn, p.request_id) {
-                        Ok(_) => {
-                            send_ws_message_to(own_tx, "friend_request_rejected", "Friend request rejected.").await;
-                            handle_get_friend_requests(state, user, own_tx).await; // Refresh the list
+                        Ok(Some(sender_id)) => {
+                            let sender_username: String = conn.query_row("SELECT username FROM users WHERE id = ?1", params![sender_id], |r| r.get(0)).unwrap_or_default();
+                            send_ws_message_to(own_tx, "friend_request_rejected", &serde_json::json!({ "from_username": sender_username })).await;
+                            handle_get_friend_requests(state.clone(), user, own_tx).await; // Refresh the list
+
+                            let sender_tx = { state.online_users.lock().unwrap().get(&sender_id).cloned() };
+                            if let Some(s_tx) = sender_tx {
+                                send_ws_message_to(&s_tx, "friend_request_rejected", &serde_json::json!({ "from_username": user.username })).await;
+                            }
                         }
-                        Err(e) => {
-                            send_ws_message_to(own_tx, "friend_request_fail", e.to_string()).await;
-                        }
+                        Ok(None) => {}
+                        Err(e) => { send_ws_message_to(own_tx, "friend_request_fail", &serde_json::json!({ "error": e.to_string() })).await; }
                     }
                 }
             }
@@ -327,12 +291,8 @@ pub async fn handle_message(
                         handle_get_user_rooms(state.clone(), user, own_tx).await; // Also refresh chats
 
                         // Notify the other user if they are online
-                        let friend_tx = {
-                            let online_users = state.online_users.lock().unwrap();
-                            online_users.get(&p.friend_id).cloned()
-                        };
+                        let friend_tx = { state.online_users.lock().unwrap().get(&p.friend_id).cloned() };
                         if let Some(friend_tx) = friend_tx {
-                            // We need the other user's User object to refresh their lists
                             let other_user: Option<db::User> = conn.query_row(
                                 "SELECT id, username, password_hash, role FROM users WHERE id = ?1",
                                 params![p.friend_id],
@@ -351,8 +311,6 @@ pub async fn handle_message(
                 }
             }
         }
-
-        // --- Admin commands (can be added back here if needed) ---
 
         "request_voice_chat" => {
             if let Some(ref room_id) = current_room_id {
@@ -395,7 +353,7 @@ pub async fn handle_message(
                 }
                 Err(e) => {
                     tracing::error!("Failed to get all users for admin: {}", e);
-                    send_ws_message_to(own_tx, "admin_error", "Failed to retrieve users.").await;
+                    send_ws_message_to(own_tx, "admin_error", &serde_json::json!({ "error": "Failed to retrieve users." })).await;
                 }
             }
         }
@@ -408,7 +366,7 @@ pub async fn handle_message(
                 }
                 Err(e) => {
                     tracing::error!("Failed to get all rooms for admin: {}", e);
-                    send_ws_message_to(own_tx, "admin_error", "Failed to retrieve rooms.").await;
+                    send_ws_message_to(own_tx, "admin_error", &serde_json::json!({ "error": "Failed to retrieve rooms." })).await;
                 }
             }
         }
@@ -418,13 +376,13 @@ pub async fn handle_message(
                 let conn = state.db_pool.get().unwrap();
                 match db::create_user(&conn, &p.username, &p.password, Some(&p.role)) {
                     Ok(_) => {
-                        send_ws_message_to(own_tx, "admin_create_user_ok", "User created successfully.").await;
+                        send_ws_message_to(own_tx, "admin_create_user_ok", &serde_json::json!("User created successfully.")).await;
                         // Also refresh the user list
                         let users = db::get_all_users(&conn).unwrap_or_default();
                         send_ws_message_to(own_tx, "admin_all_users", users).await;
                     }
                     Err(e) => {
-                        send_ws_message_to(own_tx, "admin_create_user_fail", e.to_string()).await;
+                        send_ws_message_to(own_tx, "admin_create_user_fail", &serde_json::json!({ "error": e.to_string() })).await;
                     }
                 }
             }
@@ -444,12 +402,12 @@ pub async fn handle_message(
                 let conn = state.db_pool.get().unwrap();
                 match db::delete_user(&conn, p.user_id) {
                     Ok(_) => {
-                        send_ws_message_to(own_tx, "admin_generic_ok", "User deleted successfully.").await;
+                        send_ws_message_to(own_tx, "admin_generic_ok", &serde_json::json!("User deleted successfully.")).await;
                         let users = db::get_all_users(&conn).unwrap_or_default();
                         send_ws_message_to(own_tx, "admin_all_users", users).await;
                     }
                     Err(e) => {
-                        send_ws_message_to(own_tx, "admin_error", e.to_string()).await;
+                        send_ws_message_to(own_tx, "admin_error", &serde_json::json!({ "error": e.to_string() })).await;
                     }
                 }
             }
@@ -460,12 +418,40 @@ pub async fn handle_message(
                 let conn = state.db_pool.get().unwrap();
                 match db::delete_room(&conn, p.room_id) {
                     Ok(_) => {
-                        send_ws_message_to(own_tx, "admin_generic_ok", "Room deleted successfully.").await;
+                        send_ws_message_to(own_tx, "admin_generic_ok", &serde_json::json!("Room deleted successfully.")).await;
                         let rooms = db::get_all_rooms(&conn).unwrap_or_default();
                         send_ws_message_to(own_tx, "admin_all_rooms", rooms).await;
                     }
                     Err(e) => {
-                        send_ws_message_to(own_tx, "admin_error", e.to_string()).await;
+                        send_ws_message_to(own_tx, "admin_error", &serde_json::json!({ "error": e.to_string() })).await;
+                    }
+                }
+            }
+        }
+        "admin_change_port" => {
+            if user.role != "admin" { return; }
+            if let Ok(p) = serde_json::from_value::<AdminChangePortPayload>(req.payload.clone()) {
+                let mut config = load_config();
+                config.port = p.port;
+                match serde_json::to_string_pretty(&config) {
+                    Ok(json) => {
+                        if let Err(e) = fs::write("config.json", json) {
+                            tracing::error!("Failed to write new config: {}", e);
+                            send_ws_message_to(own_tx, "admin_change_port_fail", &serde_json::json!({ "error": e.to_string() })).await;
+                        } else {
+                            send_ws_message_to(own_tx, "admin_change_port_ok", &serde_json::json!({})).await;
+                            // Give the message a moment to be sent before shutting down
+                            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                            if let Some(tx) = state.shutdown_tx.lock().unwrap().take() {
+                                if tx.send(()).is_err() {
+                                    tracing::error!("Failed to send shutdown signal for port change.");
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to serialize new config: {}", e);
+                        send_ws_message_to(own_tx, "admin_change_port_fail", &serde_json::json!({ "error": e.to_string() })).await;
                     }
                 }
             }

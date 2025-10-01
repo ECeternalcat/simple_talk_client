@@ -1,12 +1,13 @@
 import { handleAuth } from './auth.js';
-import { initWebSocket, sendWsMessage, setCurrentUser, currentUser, getWebSocket } from './websocket.js';
+import { initWebSocket, sendWsMessage, setCurrentUser } from './websocket.js';
 import { showMessage, addChatMessage, showPage } from './ui.js';
 import { renderChatList } from './chats.js';
 import { renderFriendRequestList, addFriendRequestToList, renderFriendList } from './friends.js';
 import { renderUserList, renderRoomList } from './admin.js';
 import { startAudioCapture, stopAudioCapture, setMute } from './audio.js';
+import { initI18n, setLanguage, t } from './i18n.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // --- Views & Pages ---
     const setupView = document.getElementById('setup-view');
     const mainView = document.getElementById('main-view');
@@ -32,8 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshRoomsBtn = document.getElementById('refresh-rooms-btn');
     const createUserBtn = document.getElementById('create-user-btn');
     const shutdownServerBtn = document.getElementById('shutdown-server-btn');
+    const changePortBtn = document.getElementById('change-port-btn');
     const userListContainer = document.getElementById('user-list-container');
     const roomListContainer = document.getElementById('room-list-container');
+    const languageSelector = document.getElementById('language-selector');
 
     // --- Nav Buttons ---
     const navChatsBtn = document.getElementById('nav-chats');
@@ -46,15 +49,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- App State ---
     let isMuted = false;
     let isVoiceActive = false;
+    let isUserAuthenticated = false;
+    let lastChatList = [];
+    let lastFriendList = [];
+    let lastFriendRequestList = [];
+
+    // Initialize i18n
+    await initI18n();
+
+    function rerenderDynamicLists() {
+        renderChatList(lastChatList);
+        renderFriendList(lastFriendList);
+        renderFriendRequestList(lastFriendRequestList);
+    }
 
     // --- WebSocket Message Handlers ---
     const handlers = {
         // Auth
-        register_ok: (payload) => showMessage(document.getElementById('message-area'), payload, 'success'),
-        register_fail: (payload) => showMessage(document.getElementById('message-area'), payload, 'error'),
+        register_ok: (payload) => showMessage(document.getElementById('message-area'), t('genericSuccess').replace('{message}', payload), 'success'),
+        register_fail: (payload) => showMessage(document.getElementById('message-area'), t('genericError').replace('{message}', payload), 'error'),
         auth_fail: (payload) => {
+            isUserAuthenticated = false;
             localStorage.removeItem('authToken');
-            showMessage(document.getElementById('message-area'), payload, 'error');
+            showMessage(document.getElementById('message-area'), t('genericError').replace('{message}', payload), 'error');
             mainView.classList.add('hidden');
             callView.classList.add('hidden');
             setupView.classList.remove('hidden');
@@ -64,22 +81,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('authToken', payload.token);
             }
             setCurrentUser(payload);
+            isUserAuthenticated = true; // Set authentication flag
+
             setupView.classList.add('hidden');
             mainView.classList.remove('hidden');
             showPage('chats-page');
 
-            // Set up profile page
             profileUsername.textContent = payload.username;
             if (payload.role === 'admin') {
                 adminPanelBtn.classList.remove('hidden');
             }
+
+            // Render any lists that were received before authentication was complete
+            rerenderDynamicLists();
         },
 
         // Room & Chat
         join_ok: (payload) => {
             mainView.classList.add('hidden');
             callView.classList.remove('hidden');
-            document.getElementById('status-text').textContent = `Room ID: ${payload.roomId}`;
+            document.getElementById('status-text').textContent = `${t('tableHeaderId')}: ${payload.roomId}`;
             
             voiceControls.classList.add('hidden');
             startVoiceBtn.classList.remove('hidden');
@@ -101,7 +122,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
         },
-        chat_list: (payload) => renderChatList(payload),
+        chat_list: (payload) => {
+            lastChatList = payload;
+            if (isUserAuthenticated) {
+                renderChatList(lastChatList);
+            }
+        },
         message_history: (payload) => {
             document.getElementById('chat-messages').innerHTML = '';
             payload.forEach(addChatMessage);
@@ -109,24 +135,34 @@ document.addEventListener('DOMContentLoaded', () => {
         new_chat_message: (payload) => addChatMessage(payload),
 
         // Friend Requests & Invitations
-        friend_list: (payload) => renderFriendList(payload),
-        friend_request_sent: (payload) => showMessage(document.getElementById('add-friend-message-area'), payload, 'success'),
-        friend_request_fail: (payload) => showMessage(document.getElementById('add-friend-message-area'), payload, 'error'),
-        friend_requests: (payload) => renderFriendRequestList(payload),
+        friend_list: (payload) => {
+            lastFriendList = payload;
+            if (isUserAuthenticated) {
+                renderFriendList(lastFriendList);
+            }
+        },
+        friend_request_sent: (payload) => showMessage(document.getElementById('add-friend-message-area'), t('friendRequestSentSuccess').replace('{username}', payload.username), 'success'),
+        friend_request_fail: (payload) => showMessage(document.getElementById('add-friend-message-area'), t('friendRequestFail').replace('{error}', payload), 'error'),
+        friend_requests: (payload) => {
+            lastFriendRequestList = payload;
+            if (isUserAuthenticated) {
+                renderFriendRequestList(lastFriendRequestList);
+            }
+        },
         new_friend_request: (payload) => addFriendRequestToList(payload),
         friend_request_accepted: (payload) => {
-            alert(payload);
+            alert(t('friendRequestAccepted').replace('{username}', payload.from_username));
         },
         friend_request_rejected: (payload) => {
-            alert(payload);
+            alert(t('friendRequestRejected').replace('{username}', payload.from_username));
         },
         invitation: (payload) => {
-            if (confirm(`${payload.from_username} invites you to join the chat.`)) {
+            if (confirm(t('chatInvitation').replace('{username}', payload.from_username))) {
                 sendWsMessage('join_room', { roomId: payload.room_id });
             }
         },
         voice_chat_invitation: (payload) => {
-            if (confirm(`${payload.from_username} has started a voice chat. Join?`)) {
+            if (confirm(t('voiceInvitation').replace('{username}', payload.from_username))) {
                 const ws = getWebSocket();
                 if (ws) {
                     startAudioCapture(ws).then(success => {
@@ -143,15 +179,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Admin
         admin_all_users: (payload) => renderUserList(payload),
         admin_all_rooms: (payload) => renderRoomList(payload),
-        admin_create_user_ok: (payload) => alert(payload),
-        admin_create_user_fail: (payload) => alert(`Error: ${payload}`),
-        admin_generic_ok: (payload) => alert(payload),
-        admin_error: (payload) => alert(`Error: ${payload}`),
+        admin_create_user_ok: (payload) => alert(t('genericSuccess').replace('{message}', payload)),
+        admin_create_user_fail: (payload) => alert(t('genericError').replace('{message}', payload)),
+        admin_change_port_ok: () => alert(t('changePortSuccess')),
+        admin_change_port_fail: (payload) => alert(t('changePortFail').replace('{error}', payload)),
+        admin_generic_ok: (payload) => alert(t('genericSuccess').replace('{message}', payload)),
+        admin_error: (payload) => alert(t('genericError').replace('{message}', payload)),
 
         // General
         error: (e) => {
             console.error('[WS] WebSocket error:', e);
-            showMessage(document.getElementById('message-area'), 'Connection error.');
+            showMessage(document.getElementById('message-area'), t('connectionError'));
         },
         close: (e) => {
             console.log(`[WS] WebSocket disconnected. Code: ${e.code}, Reason: ${e.reason}`);
@@ -162,6 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginBtn.addEventListener('click', () => handleAuth('login', handlers));
     registerBtn.addEventListener('click', () => handleAuth('register', handlers));
+
+    languageSelector.addEventListener('change', async (e) => {
+        await setLanguage(e.target.value);
+        rerenderDynamicLists();
+    });
 
     // Navigation
     navChatsBtn.addEventListener('click', () => showPage('chats-page'));
@@ -193,15 +236,28 @@ document.addEventListener('DOMContentLoaded', () => {
             newUsernameInput.value = '';
             newPasswordInput.value = '';
         } else {
-            alert('New username and password cannot be empty.');
+            alert(t('adminNewUserEmptyFields'));
         }
     });
 
     shutdownServerBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to shut down the entire server?')) {
+        if (confirm(t('confirmShutdown'))) {
             sendWsMessage('admin_shutdown_server');
-            alert('Shutdown command sent. The server will now terminate.');
+            alert(t('shutdownCommandSent'));
         }
+    });
+
+    changePortBtn.addEventListener('click', () => {
+        const newPortInput = document.getElementById('new-port-input');
+        const port = parseInt(newPortInput.value, 10);
+
+        if (isNaN(port) || port < 1 || port > 65535) {
+            alert(t('invalidPort'));
+            return;
+        }
+
+        sendWsMessage('admin_change_port', { port });
+        newPortInput.value = '';
     });
 
     userListContainer.addEventListener('click', (e) => {
@@ -210,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const userId = parseInt(target.dataset.userId, 10);
         const username = target.dataset.username;
-        if (confirm(`Are you sure you want to delete user '${username}' (ID: ${userId})? This is irreversible.`)) {
+        if (confirm(t('confirmDeleteUser').replace('{username}', username).replace('{userId}', userId))) {
             sendWsMessage('admin_delete_user', { user_id: userId });
         }
     });
@@ -220,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!target) return;
 
         const roomId = parseInt(target.dataset.roomId, 10);
-        if (confirm(`Are you sure you want to delete room ID: ${roomId}? This is irreversible.`)) {
+        if (confirm(t('confirmDeleteRoom').replace('{roomId}', roomId))) {
             sendWsMessage('admin_delete_room', { room_id: roomId });
         }
     });
@@ -269,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (deleteBtn) {
             const friendId = parseInt(deleteBtn.dataset.friendId, 10);
             const friendUsername = friendItem.dataset.friendUsername;
-            if (confirm(`Are you sure you want to remove ${friendUsername} as a friend?`)) {
+            if (confirm(t('confirmRemoveFriend').replace('{username}', friendUsername))) {
                 sendWsMessage('delete_friend', { friendId });
             }
         } else if (friendItem) {
@@ -302,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
     muteMicBtn.addEventListener('click', () => {
         isMuted = !isMuted;
         setMute(isMuted);
-        muteMicBtn.textContent = isMuted ? 'Unmute Mic' : 'Mute Mic';
+        muteMicBtn.textContent = isMuted ? t('unmuteMicButton') : t('muteMicButton');
     });
 
     // --- Auto-Login on Page Load ---

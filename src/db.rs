@@ -44,8 +44,8 @@ pub struct FriendRequestInfo {
 #[derive(Debug, Serialize)]
 pub struct RoomInfo {
     pub room_id: i64,
-    pub room_name: String, // For 1-on-1 chats, this is the other user's name
-    pub is_online: bool,
+    pub name: Option<String>,
+    pub participants: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -193,7 +193,7 @@ pub fn get_all_users(conn: &Connection) -> Result<Vec<User>> {
             role: row.get(3)?,
         })
     })?;
-    Ok(user_iter.collect::<Result<Vec<User>>>()?)
+    Ok(user_iter.collect::<Result<Vec<User>>>()?) 
 }
 
 /// Deletes a user from the database by their ID.
@@ -287,44 +287,40 @@ pub fn get_messages_for_room(conn: &Connection, room_id: i64) -> Result<Vec<Chat
 
 // --- Room & Friendship Functions ---
 
-/// Gets all rooms (and the other participant's name) for a given user.
-pub fn get_user_rooms(conn: &Connection, user_id: i32) -> Result<Vec<(i64, String)>> {
+/// Gets all rooms for a given user, including a potential custom name and all participants.
+pub fn get_user_rooms(conn: &Connection, user_id: i32) -> Result<Vec<RoomInfo>> {
     let mut stmt = conn.prepare(
-        "SELECT r.id, other_user.username
-         FROM rooms r
-         JOIN room_participants rp1 ON r.id = rp1.room_id
-         JOIN room_participants rp2 ON r.id = rp2.room_id
-         JOIN users other_user ON rp2.user_id = other_user.id
-         WHERE rp1.user_id = ?1 AND rp2.user_id != ?1 AND r.is_private = TRUE"
+        "SELECT r.id, r.name\n         FROM rooms r\n         JOIN room_participants rp ON r.id = rp.room_id\n         WHERE rp.user_id = ?1 ORDER BY r.created_at DESC"
     )?;
-    let room_iter = stmt.query_map(params![user_id], |row| {
-        Ok((row.get(0)?, row.get(1)?))
-    })?;
-    Ok(room_iter.collect::<Result<Vec<(i64, String)>>>()?) 
+    let room_iter = stmt.query_map(params![user_id], |row| Ok((row.get(0)?, row.get(1)?)))?;
+
+    let mut rooms_info = Vec::new();
+    for room_result in room_iter {
+        if let Ok((room_id, name)) = room_result {
+            let mut p_stmt = conn.prepare(
+                "SELECT u.username FROM users u JOIN room_participants rp ON u.id = rp.user_id WHERE rp.room_id = ?1 ORDER BY u.username"
+            )?;
+            let participants = p_stmt.query_map(params![room_id], |row| row.get(0))?.collect::<Result<Vec<String>>>()?;
+            rooms_info.push(RoomInfo { room_id, name, participants });
+        }
+    }
+    Ok(rooms_info)
 }
 
 /// Finds a private room between two users, or creates one if it doesn't exist.
 pub fn get_or_create_private_room(conn: &mut Connection, user1_id: i32, user2_id: i32) -> Result<i64> {
     let tx = conn.transaction()?;
 
-    // Query to find a private room with exactly these two participants.
-    let query = "
-        SELECT r.id
-        FROM rooms r
-        JOIN room_participants rp1 ON r.id = rp1.room_id
-        JOIN room_participants rp2 ON r.id = rp2.room_id
-        WHERE r.is_private = TRUE
-          AND rp1.user_id = ?1
-          AND rp2.user_id = ?2
-    ";
-
-    let room_id: Option<i64> = tx.query_row(query, params![user1_id, user2_id], |row| row.get(0)).optional()?;
+    let room_id: Option<i64> = tx.query_row(
+        "SELECT rp1.room_id\n         FROM room_participants rp1\n         JOIN room_participants rp2 ON rp1.room_id = rp2.room_id\n         JOIN rooms r ON rp1.room_id = r.id\n         WHERE rp1.user_id = ?1 AND rp2.user_id = ?2 AND r.is_private = TRUE",
+        params![user1_id, user2_id],
+        |row| row.get(0),
+    ).optional()?;
 
     if let Some(id) = room_id {
         tx.commit()?;
         Ok(id)
     } else {
-        // No room found, create one.
         tx.execute("INSERT INTO rooms (is_private) VALUES (TRUE)", [])?;
         let new_room_id = tx.last_insert_rowid();
 
@@ -354,10 +350,7 @@ pub fn send_friend_request(conn: &Connection, from_user_id: i32, to_user_id: i32
 
     // Now, whether it was inserted or ignored, fetch the definitive request info.
     conn.query_row(
-        "SELECT r.id, r.from_user_id, u.username, r.to_user_id, r.status, r.timestamp
-         FROM friend_requests r
-         JOIN users u ON r.from_user_id = u.id
-         WHERE r.from_user_id = ?1 AND r.to_user_id = ?2",
+        "SELECT r.id, r.from_user_id, u.username, r.to_user_id, r.status, r.timestamp\n         FROM friend_requests r\n         JOIN users u ON r.from_user_id = u.id\n         WHERE r.from_user_id = ?1 AND r.to_user_id = ?2",
         params![from_user_id, to_user_id],
         |row| {
             Ok(FriendRequestInfo {
@@ -374,10 +367,7 @@ pub fn send_friend_request(conn: &Connection, from_user_id: i32, to_user_id: i32
 
 pub fn get_friend_requests(conn: &Connection, user_id: i32) -> Result<Vec<FriendRequestInfo>> {
     let mut stmt = conn.prepare(
-        "SELECT r.id, r.from_user_id, u.username, r.to_user_id, r.status, r.timestamp
-         FROM friend_requests r
-         JOIN users u ON r.from_user_id = u.id
-         WHERE r.to_user_id = ?1 AND r.status = 'pending'"
+        "SELECT r.id, r.from_user_id, u.username, r.to_user_id, r.status, r.timestamp\n         FROM friend_requests r\n         JOIN users u ON r.from_user_id = u.id\n         WHERE r.to_user_id = ?1 AND r.status = 'pending'"
     )?;
     let req_iter = stmt.query_map(params![user_id], |row| {
         Ok(FriendRequestInfo {
@@ -389,10 +379,10 @@ pub fn get_friend_requests(conn: &Connection, user_id: i32) -> Result<Vec<Friend
             timestamp: row.get(5)?,
         })
     })?;
-    Ok(req_iter.collect::<Result<Vec<FriendRequestInfo>>>()?)
+    Ok(req_iter.collect::<Result<Vec<FriendRequestInfo>>>()?) 
 }
 
-pub fn accept_friend_request(conn: &mut Connection, request_id: i32) -> Result<()> {
+pub fn accept_friend_request(conn: &mut Connection, request_id: i32) -> Result<Option<i32>> {
     let tx = conn.transaction()?;
 
     let (from_user_id, to_user_id): (i32, i32) = tx.query_row(
@@ -410,23 +400,16 @@ pub fn accept_friend_request(conn: &mut Connection, request_id: i32) -> Result<(
     let _ = get_or_create_private_room_in_tx(&tx, from_user_id, to_user_id)?;
 
     tx.commit()?;
-    Ok(())
+    Ok(Some(from_user_id))
 }
 
 /// Separate helper to work within an existing transaction
 fn get_or_create_private_room_in_tx(tx: &rusqlite::Transaction, user1_id: i32, user2_id: i32) -> Result<i64> {
-     // Query to find a private room with exactly these two participants.
-    let query = "
-        SELECT r.id
-        FROM rooms r
-        JOIN room_participants rp1 ON r.id = rp1.room_id
-        JOIN room_participants rp2 ON r.id = rp2.room_id
-        WHERE r.is_private = TRUE
-          AND rp1.user_id = ?1
-          AND rp2.user_id = ?2
-    ";
-
-    let room_id: Option<i64> = tx.query_row(query, params![user1_id, user2_id], |row| row.get(0)).optional()?;
+    let room_id: Option<i64> = tx.query_row(
+        "SELECT rp1.room_id\n         FROM room_participants rp1\n         JOIN room_participants rp2 ON rp1.room_id = rp2.room_id\n         JOIN rooms r ON rp1.room_id = r.id\n         WHERE rp1.user_id = ?1 AND rp2.user_id = ?2 AND r.is_private = TRUE",
+        params![user1_id, user2_id],
+        |row| row.get(0),
+    ).optional()?;
 
     if let Some(id) = room_id {
         Ok(id)
@@ -448,23 +431,23 @@ fn get_or_create_private_room_in_tx(tx: &rusqlite::Transaction, user1_id: i32, u
     }
 }
 
-pub fn reject_friend_request(conn: &Connection, request_id: i32) -> Result<()> {
+pub fn reject_friend_request(conn: &Connection, request_id: i32) -> Result<Option<i32>> {
+    let sender_id: Option<i32> = conn.query_row(
+        "SELECT from_user_id FROM friend_requests WHERE id = ?1",
+        params![request_id],
+        |row| row.get(0)
+    ).optional()?;
+
     conn.execute(
         "UPDATE friend_requests SET status = 'rejected' WHERE id = ?1",
         params![request_id],
     )?;
-    Ok(())
+    Ok(sender_id)
 }
 
 pub fn get_friends(conn: &Connection, user_id: i32) -> Result<Vec<User>> {
     let mut stmt = conn.prepare(
-        "SELECT
-            CASE
-                WHEN from_user_id = ?1 THEN to_user_id
-                ELSE from_user_id
-            END AS friend_id
-         FROM friend_requests
-         WHERE (from_user_id = ?1 OR to_user_id = ?1) AND status = 'accepted'"
+        "SELECT\n            CASE\n                WHEN from_user_id = ?1 THEN to_user_id\n                ELSE from_user_id\n            END AS friend_id\n         FROM friend_requests\n         WHERE (from_user_id = ?1 OR to_user_id = ?1) AND status = 'accepted'"
     )?;
     let friend_ids: Vec<i32> = stmt.query_map(params![user_id], |row| row.get(0))?
                                    .collect::<Result<Vec<i32>>>()?;
@@ -504,13 +487,7 @@ pub fn delete_friend(conn: &mut Connection, user1_id: i32, user2_id: i32) -> Res
 
     // 1. Find the private room ID between the two users
     let room_id: Option<i64> = tx.query_row(
-        "SELECT r.id
-         FROM rooms r
-         JOIN room_participants rp1 ON r.id = rp1.room_id
-         JOIN room_participants rp2 ON r.id = rp2.room_id
-         WHERE r.is_private = TRUE
-           AND rp1.user_id = ?1
-           AND rp2.user_id = ?2",
+        "SELECT rp1.room_id\n         FROM room_participants rp1\n         JOIN room_participants rp2 ON rp1.room_id = rp2.room_id\n         JOIN rooms r ON rp1.room_id = r.id\n         WHERE rp1.user_id = ?1 AND rp2.user_id = ?2 AND r.is_private = TRUE",
         params![user1_id, user2_id],
         |row| row.get(0),
     ).optional()?;
