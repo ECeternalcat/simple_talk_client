@@ -100,32 +100,53 @@
 
         <!-- Admin Panel View -->
         <div id="admin-panel-view" class="hidden">
-            <h2>Admin Panel</h2>
-            <button id="close-admin-panel-btn">Close</button>
-            
-            <div id="admin-user-management">
-                <h3>User Management</h3>
-                <div id="user-list-container"></div>
-                <button id="refresh-users-btn" class="btn-admin btn-safe">Refresh Users</button>
-                <h4>Create New User</h4>
-                <input type="text" id="new-username-input" placeholder="Username">
-                <input type="password" id="new-password-input" placeholder="Password">
-                <select id="new-user-role-select">
-                    <option value="normal">Normal</option>
-                    <option value="admin">Admin</option>
-                </select>
-                <button id="create-user-btn" class="btn-admin btn-safe">Create User</button>
-            </div>
+            <div class="admin-panel-content">
+                <div class="admin-panel-header">
+                    <h2>Admin Panel</h2>
+                    <button id="close-admin-panel-btn">&times;</button>
+                </div>
 
-            <div id="admin-call-management">
-                <h3>Call Management</h3>
-                <div id="room-list-container"></div>
-                <button id="refresh-rooms-btn" class="btn-admin btn-safe">Refresh Rooms</button>
-            </div>
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            User Management
+                            <span class="accordion-icon">+</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div id="user-list-container"></div>
+                            <button id="refresh-users-btn" class="btn-admin btn-safe">Refresh Users</button>
+                            <h4>Create New User</h4>
+                            <input type="text" id="new-username-input" placeholder="Username">
+                            <input type="password" id="new-password-input" placeholder="Password">
+                            <select id="new-user-role-select">
+                                <option value="normal">Normal</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <button id="create-user-btn" class="btn-admin btn-safe">Create User</button>
+                        </div>
+                    </div>
 
-            <div id="admin-server-management">
-                <h3>Server Management</h3>
-                <button id="shutdown-server-btn" class="btn-admin btn-danger">Shutdown Server</button>
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            Call Management
+                            <span class="accordion-icon">+</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div id="room-list-container"></div>
+                            <button id="refresh-rooms-btn" class="btn-admin btn-safe">Refresh Rooms</button>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            Server Management
+                            <span class="accordion-icon">+</span>
+                        </button>
+                        <div class="accordion-content">
+                            <button id="shutdown-server-btn" class="btn-admin btn-danger">Shutdown Server</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

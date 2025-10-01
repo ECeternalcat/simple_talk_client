@@ -3,6 +3,7 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-size: 16px; /* Base font size */
 }
 
 body {
@@ -17,7 +18,7 @@ body {
 #container {
     width: 100%;
     height: 100%;
-    max-width: 500px; /* Or your preferred max-width */
+    max-width: 500px;
     background-color: white;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     display: flex;
@@ -32,7 +33,7 @@ body {
 }
 
 .form-wrapper {
-    padding: 2rem 3rem;
+    padding: 2rem 1.5rem;
     width: 100%;
     box-sizing: border-box;
 }
@@ -56,7 +57,7 @@ body {
 }
 
 .header {
-    padding: 1rem 0;
+    padding: 0.5rem 0;
     border-bottom: 1px solid #eee;
     margin-bottom: 1rem;
 }
@@ -74,7 +75,7 @@ button {
     padding: 12px 20px;
     border: none;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 1rem;
     cursor: pointer;
     margin: 5px;
     transition: background-color 0.2s;
@@ -105,7 +106,7 @@ input[type="text"], input[type="password"], select {
     border: 1px solid #ccc;
     border-radius: 5px;
     width: calc(100% - 26px);
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 .button-group {
@@ -116,7 +117,7 @@ input[type="text"], input[type="password"], select {
 
 .message {
     min-height: 24px;
-    font-size: 14px;
+    font-size: 0.9rem;
     color: #d9534f; /* Default to error color */
 }
 
@@ -149,7 +150,7 @@ input[type="text"], input[type="password"], select {
     border-radius: 0;
     background-color: transparent;
     color: #333;
-    font-size: 14px;
+    font-size: 0.9rem;
 }
 
 .nav-btn.active {
@@ -233,19 +234,16 @@ input[type="text"], input[type="password"], select {
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 100;
 }
 
-#call-container, #admin-panel-view > div {
+#call-container {
     background-color: white;
-    padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     width: 90%;
     max-width: 900px;
     text-align: left;
-}
-
-#call-container {
     height: 80vh;
     display: flex;
     padding: 0;
@@ -257,6 +255,7 @@ input[type="text"], input[type="password"], select {
     padding: 2rem;
     border-right: 1px solid #eee;
     text-align: center;
+    overflow-y: auto;
 }
 
 #voice-controls {
@@ -291,60 +290,177 @@ input[type="text"], input[type="password"], select {
     margin-bottom: 1rem;
 }
 
-.chat-message {
-    margin-bottom: 0.5rem;
-}
-
+.chat-message { margin-bottom: 0.5rem; }
 .chat-message .username { font-weight: bold; }
 .chat-message .timestamp { font-size: 0.8em; color: #888; margin-left: 0.5rem; }
 
-#chat-input-container {
-    display: flex;
-}
+#chat-input-container { display: flex; }
+#chat-input { flex-grow: 1; margin-bottom: 0; }
+#send-chat-btn { flex-grow: 0; width: 100px; }
 
-#chat-input {
-    flex-grow: 1;
-    margin-bottom: 0;
-}
-
-#send-chat-btn {
-    flex-grow: 0;
-    width: 100px;
-}
-
+/* --- Admin Panel --- */
 #admin-panel-view {
     align-items: flex-start;
     overflow-y: auto;
 }
 
-#admin-panel-view > div {
+.admin-panel-content {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     width: 90%;
     max-width: 800px;
     margin: 5vh auto;
+    padding: 0;
+    text-align: left;
 }
 
-#admin-panel-view h3 {
-    margin-top: 2rem;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.5rem;
+.admin-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #ddd;
 }
 
-#admin-panel-view table {
+.admin-panel-header h2 {
+    margin: 0;
+}
+
+#close-admin-panel-btn {
+    border: none;
+    background: transparent;
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 1;
+    padding: 0 10px;
+    margin: 0;
+    color: #888;
+}
+#close-admin-panel-btn:hover { color: #333; }
+
+.accordion-header {
+    background-color: #f7f7f7;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    padding: 15px 20px;
+    text-align: left;
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    border-radius: 0;
+}
+
+.accordion-header:hover {
+    background-color: #e9e9e9;
+}
+
+.accordion-icon {
+    font-size: 1.5rem;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.accordion-header.active + .accordion-content {
+    display: block;
+}
+
+.accordion-header.active .accordion-icon {
+    transform: rotate(45deg);
+}
+
+.accordion-content {
+    padding: 20px;
+    display: none;
+    border-bottom: 1px solid #ddd;
+}
+
+.accordion-content h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.responsive-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 1rem;
 }
 
-#admin-panel-view th, #admin-panel-view td {
+.responsive-table th, .responsive-table td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
 }
 
-#admin-panel-view th { background-color: #f2f2f2; }
+.responsive-table th { background-color: #f2f2f2; }
 
-.btn-admin { padding: 5px 10px; font-size: 14px; flex-grow: 0; }
+.btn-admin { padding: 5px 10px; font-size: 0.9rem; flex-grow: 0; }
 .btn-danger { background-color: #d9534f; color: white; }
 .btn-danger:hover { background-color: #c9302c; }
 .btn-safe { background-color: #5cb85c; color: white; }
 .btn-safe:hover { background-color: #4cae4c; }
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    html, body { font-size: 14px; }
+
+    #container {
+        max-width: 100%;
+        box-shadow: none;
+    }
+
+    /* Stack call panels vertically */
+    #call-container {
+        flex-direction: column;
+        height: 95vh;
+    }
+
+    #voice-panel {
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        flex-basis: auto;
+        flex-shrink: 1;
+        padding: 1rem;
+    }
+
+    /* Responsive tables for Admin Panel */
+    .responsive-table thead {
+        display: none;
+    }
+
+    .responsive-table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+    }
+
+    .responsive-table td {
+        display: block;
+        text-align: right;
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+    }
+
+    .responsive-table td:last-child {
+        border-bottom: none;
+    }
+
+    .responsive-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: calc(50% - 20px);
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+    }
+}

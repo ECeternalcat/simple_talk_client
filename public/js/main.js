@@ -225,6 +225,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Admin Panel Accordion
+    adminPanelView.addEventListener('click', (e) => {
+        const header = e.target.closest('.accordion-header');
+        if (!header) return;
+
+        const currentlyActive = document.querySelector('.accordion-header.active');
+        if (currentlyActive && currentlyActive !== header) {
+            currentlyActive.classList.remove('active');
+        }
+
+        header.classList.toggle('active');
+    });
+
     addFriendBtn.addEventListener('click', () => {
         const addFriendUsernameInput = document.getElementById('add-friend-username-input');
         const username = addFriendUsernameInput.value;

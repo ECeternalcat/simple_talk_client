@@ -8,6 +8,7 @@ function renderUserList(users) {
     }
 
     const table = document.createElement('table');
+    table.classList.add('responsive-table');
     table.innerHTML = `
         <thead>
             <tr>
@@ -20,10 +21,10 @@ function renderUserList(users) {
         <tbody>
             ${users.map(user => `
                 <tr>
-                    <td>${user._id}</td>
-                    <td>${user.username}</td>
-                    <td>${user.role}</td>
-                    <td>
+                    <td data-label="ID">${user._id}</td>
+                    <td data-label="Username">${user.username}</td>
+                    <td data-label="Role">${user.role}</td>
+                    <td data-label="Actions">
                         <button class="btn-admin btn-danger btn-small" data-action="delete-user" data-user-id="${user._id}" data-username="${user.username}">Delete</button>
                     </td>
                 </tr>
@@ -44,6 +45,7 @@ function renderRoomList(rooms) {
     }
 
     const table = document.createElement('table');
+    table.classList.add('responsive-table');
     table.innerHTML = `
         <thead>
             <tr>
@@ -57,11 +59,11 @@ function renderRoomList(rooms) {
         <tbody>
             ${rooms.map(room => `
                 <tr>
-                    <td>${room.id}</td>
-                    <td>${room.is_private ? 'Private' : 'Group'}</td>
-                    <td>${room.participants.join(', ')}</td>
-                    <td>${new Date(room.created_at).toLocaleString()}</td>
-                    <td>
+                    <td data-label="ID">${room.id}</td>
+                    <td data-label="Type">${room.is_private ? 'Private' : 'Group'}</td>
+                    <td data-label="Participants">${room.participants.join(', ')}</td>
+                    <td data-label="Created At">${new Date(room.created_at).toLocaleString()}</td>
+                    <td data-label="Actions">
                         <button class="btn-admin btn-danger btn-small" data-action="delete-room" data-room-id="${room.id}">Delete</button>
                     </td>
                 </tr>
