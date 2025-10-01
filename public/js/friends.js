@@ -22,6 +22,8 @@ function renderFriendList(friends) {
             `;
             friendList.appendChild(friendItem);
         });
+    } else {
+        friendList.innerHTML = `<li class="no-friends" data-i18n="noFriends">${t('noFriends')}</li>`;
     }
 }
 
@@ -30,6 +32,8 @@ function renderFriendRequestList(requests) {
     friendRequestList.innerHTML = ''; // Clear existing list
     if (requests && requests.length > 0) {
         requests.forEach(req => addFriendRequestToList(req, false));
+    } else {
+        friendRequestList.innerHTML = `<li class="no-requests" data-i18n="noFriendRequests">${t('noFriendRequests')}</li>`;
     }
 }
 
@@ -54,7 +58,7 @@ function addFriendRequestToList(req, isNew = true) {
     } 
 
     requestItem.innerHTML = `
-        <span>${req.username}</span>
+        <span>${req.from_username}</span>
         <div class="button-group">${buttonsHtml}</div>
     `;
 
@@ -66,11 +70,11 @@ function addFriendRequestToList(req, isNew = true) {
 
     if (req.status === 'pending' && !req.is_sender) {
         requestItem.querySelector('.accept-friend-btn').addEventListener('click', () => {
-            sendWsMessage('accept_friend_request', { requestId: req.id });
+            sendWsMessage('respond_to_friend_request', { requestId: req.id, accept: true });
             requestItem.remove();
         });
         requestItem.querySelector('.reject-friend-btn').addEventListener('click', () => {
-            sendWsMessage('reject_friend_request', { requestId: req.id });
+            sendWsMessage('respond_to_friend_request', { requestId: req.id, accept: false });
             requestItem.remove();
         });
     }

@@ -63,7 +63,15 @@ function updateUI() {
 
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
-        element.textContent = t(key);
+        const textElement = element.querySelector('.btn-text, .nav-text'); // Look for any specific text span
+
+        if (textElement) {
+            // If the span exists, only update its text
+            textElement.textContent = t(key);
+        } else {
+            // Otherwise, fall back to the original behavior
+            element.textContent = t(key);
+        }
     });
 
     document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {

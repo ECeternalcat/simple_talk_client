@@ -78,5 +78,7 @@
     "newPortPlaceholder": "输入新端口 (例如, 8080)",
     "changePortSuccess": "端口更改命令已发送。服务器将尝试在新端口上重启。",
     "changePortFail": "更改端口失败: {error}",
-    "invalidPort": "端口号无效。请输入 1 到 65535 之间的数字。"
+    "invalidPort": "端口号无效。请输入 1 到 65535 之间的数字。",
+    "noFriendRequests": "没有新的好友请求。",
+    "noFriends": "你还没有好友。"
 }

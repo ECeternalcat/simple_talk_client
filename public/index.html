@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="appTitle">Simple Voice Call</title>
+    <title data-i18n="appTitle">Simple Talk</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script type="module" src="/js/main.js"></script>
     <script type="module" src="/js/friends.js"></script>
 </head>
@@ -13,14 +15,14 @@
         <!-- Login/Register View -->
         <div id="setup-view" class="centered">
             <div class="form-wrapper">
-                <h1 data-i18n="loginViewTitle">Voice Call</h1>
+                <h1><img src="/images/favicon.svg" class="logo-icon" alt="logo"> <span data-i18n="loginViewTitle">Voice Call</span></h1>
                 <p id="message-area" class="message"></p>
                 <div class="form-container">
                     <input type="text" id="username-input" data-i18n-placeholder="usernamePlaceholder" placeholder="Username" autocomplete="username">
                     <input type="password" id="password-input" data-i18n-placeholder="passwordPlaceholder" placeholder="Password" autocomplete="current-password">
                     <div class="button-group">
-                        <button id="login-btn" data-i18n="loginButton">Login</button>
-                        <button id="register-btn" class="secondary" data-i18n="registerButton">Register</button>
+                        <button id="login-btn" data-i18n="loginButton"><i class="fas fa-sign-in-alt"></i><span class="btn-text">Login</span></button>
+                        <button id="register-btn" class="secondary" data-i18n="registerButton"><i class="fas fa-user-plus"></i><span class="btn-text">Register</span></button>
                     </div>
                 </div>
             </div>
@@ -31,7 +33,7 @@
             <div id="app-content">
                 <!-- Chats Page -->
                 <div id="chats-page" class="page">
-                    <div class="header"><h3 data-i18n="chatsTitle">Chats</h3></div>
+                    <div class="header"><h3><i class="fas fa-comments"></i> <span data-i18n="chatsTitle">Chats</span></h3></div>
                     <div class="list-container">
                         <ul id="chat-list"></ul>
                     </div>
@@ -39,49 +41,49 @@
 
                 <!-- Friends Page -->
                 <div id="friends-page" class="page hidden">
-                    <div class="header"><h3 data-i18n="friendsTitle">Friends</h3></div>
+                    <div class="header"><h3><i class="fas fa-users"></i> <span data-i18n="friendsTitle">Friends</span></h3></div>
                     <div class="list-container">
                         <ul id="friend-list"></ul>
                     </div>
 
-                    <div class="header"><h3 data-i18n="friendRequestsTitle">Friend Requests</h3></div>
+                    <div class="header"><h3><i class="fas fa-address-book"></i> <span data-i18n="friendRequestsTitle">Friend Requests</span></h3></div>
                     <div class="list-container">
                         <ul id="friend-request-list"></ul>
                     </div>
                     
-                    <div class="header"><h3 data-i18n="addFriendTitle">Add Friend</h3></div>
+                    <div class="header"><h3><i class="fas fa-user-plus"></i> <span data-i18n="addFriendTitle">Add Friend</span></h3></div>
                     <div class="form-container">
                         <p id="add-friend-message-area" class="message"></p>
                         <input type="text" id="add-friend-username-input" data-i18n-placeholder="addFriendPlaceholder" placeholder="Enter friend's username">
-                        <button id="add-friend-btn" data-i18n="addFriendButton">Add Friend</button>
+                        <button id="add-friend-btn" data-i18n="addFriendButton"><i class="fas fa-plus"></i><span class="btn-text">Add Friend</span></button>
                     </div>
                 </div>
 
                 <!-- Profile Page -->
                 <div id="profile-page" class="page hidden">
-                    <div class="header"><h3 data-i18n="profileTitle">Profile</h3></div>
+                    <div class="header"><h3><i class="fas fa-user-cog"></i> <span data-i18n="profileTitle">Profile</span></h3></div>
                     <div class="profile-container">
                         <p><span data-i18n="loggedInAs">Logged in as:</span> <span id="profile-username"></span></p>
                         
                         <div class="language-selector-container">
-                            <label for="language-selector" data-i18n="languageLabel">Language</label>
+                            <label for="language-selector" data-i18n="languageLabel"><i class="fas fa-language"></i> Language</label>
                             <select id="language-selector">
                                 <option value="en">English</option>
                                 <option value="zh">中文</option>
                             </select>
                         </div>
 
-                        <button id="admin-panel-btn" class="hidden" data-i18n="adminPanelButton">Admin Panel</button>
-                        <button id="logout-btn" class="secondary" data-i18n="logoutButton">Logout</button>
+                        <button id="admin-panel-btn" class="hidden" data-i18n="adminPanelButton"><i class="fas fa-user-shield"></i> Admin Panel</button>
+                        <button id="logout-btn" class="secondary" data-i18n="logoutButton"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Navigation Bar -->
             <div id="bottom-nav">
-                <button id="nav-chats" class="nav-btn active" data-i18n="chatsNav">Chats</button>
-                <button id="nav-friends" class="nav-btn" data-i18n="friendsNav">Friends</button>
-                <button id="nav-profile" class="nav-btn" data-i18n="profileNav">Profile</button>
+                <button id="nav-chats" class="nav-btn active" data-i18n="chatsNav"><i class="fas fa-comments"></i><span class="nav-text">Chats</span></button>
+                <button id="nav-friends" class="nav-btn" data-i18n="friendsNav"><i class="fas fa-users"></i><span class="nav-text">Friends</span></button>
+                <button id="nav-profile" class="nav-btn" data-i18n="profileNav"><i class="fas fa-user-cog"></i><span class="nav-text">Profile</span></button>
             </div>
         </div>
 
@@ -90,18 +92,18 @@
             <div id="call-container">
                 <div id="voice-panel">
                     <h2 id="status-text" data-i18n="connectingStatus">Connecting...</h2>
-                    <button id="back-to-main-btn" data-i18n="backButton">Back</button>
+                    <button id="back-to-main-btn" data-i18n="backButton"><i class="fas fa-arrow-left"></i> Back</button>
                     <div id="voice-controls" class="hidden">
-                        <button id="mute-mic-btn" data-i18n="muteMicButton">Mute Mic</button>
+                        <button id="mute-mic-btn" data-i18n="muteMicButton"><i class="fas fa-microphone-slash"></i> Mute Mic</button>
                     </div>
-                    <button id="start-voice-btn" data-i18n="startVoiceChatButton">Start Voice Chat</button>
+                    <button id="start-voice-btn" data-i18n="startVoiceChatButton"><i class="fas fa-phone"></i> Start Voice Chat</button>
                     <p id="device-mode-text"></p>
                 </div>
                 <div id="chat-panel">
                     <div id="chat-messages"></div>
                     <div id="chat-input-container">
                         <input type="text" id="chat-input" data-i18n-placeholder="chatInputPlaceholder" placeholder="Type a message...">
-                        <button id="send-chat-btn" data-i18n="sendButton">Send</button>
+                        <button id="send-chat-btn" data-i18n="sendButton"><i class="fas fa-paper-plane"></i><span class="btn-text">Send</span></button>
                     </div>
                 </div>
             </div>
@@ -112,7 +114,7 @@
             <div class="admin-panel-content">
                 <div class="admin-panel-header">
                     <h2 data-i18n="adminPanelTitle">Admin Panel</h2>
-                    <button id="close-admin-panel-btn">&times;</button>
+                    <button id="close-admin-panel-btn"><i class="fas fa-times"></i></button>
                 </div>
 
                 <div class="accordion">
@@ -123,7 +125,7 @@
                         </button>
                         <div class="accordion-content">
                             <div id="user-list-container"></div>
-                            <button id="refresh-users-btn" class="btn-admin btn-safe" data-i18n="refreshUsersButton">Refresh Users</button>
+                            <button id="refresh-users-btn" class="btn-admin btn-safe" data-i18n="refreshUsersButton"><i class="fas fa-sync-alt"></i> Refresh Users</button>
                             <h4 data-i18n="createNewUserTitle">Create New User</h4>
                             <input type="text" id="new-username-input" data-i18n-placeholder="usernamePlaceholder" placeholder="Username">
                             <input type="password" id="new-password-input" data-i18n-placeholder="passwordPlaceholder" placeholder="Password">
@@ -131,7 +133,7 @@
                                 <option value="normal" data-i18n="userRoleNormal">Normal</option>
                                 <option value="admin" data-i18n="userRoleAdmin">Admin</option>
                             </select>
-                            <button id="create-user-btn" class="btn-admin btn-safe" data-i18n="createUserButton">Create User</button>
+                            <button id="create-user-btn" class="btn-admin btn-safe" data-i18n="createUserButton"><i class="fas fa-user-plus"></i> Create User</button>
                         </div>
                     </div>
 
@@ -142,7 +144,7 @@
                         </button>
                         <div class="accordion-content">
                             <div id="room-list-container"></div>
-                            <button id="refresh-rooms-btn" class="btn-admin btn-safe" data-i18n="refreshRoomsButton">Refresh Rooms</button>
+                            <button id="refresh-rooms-btn" class="btn-admin btn-safe" data-i18n="refreshRoomsButton"><i class="fas fa-sync-alt"></i> Refresh Rooms</button>
                         </div>
                     </div>
 
@@ -155,10 +157,10 @@
                             <div class="form-container vertical">
                                 <h4>Change Server Port</h4>
                                 <input type="number" id="new-port-input" data-i18n-placeholder="newPortPlaceholder" placeholder="Enter new port (e.g., 8080)">
-                                <button id="change-port-btn" class="btn-admin btn-safe" data-i18n="changePortButton">Change Port</button>
+                                <button id="change-port-btn" class="btn-admin btn-safe" data-i18n="changePortButton"><i class="fas fa-cogs"></i> Change Port</button>
                             </div>
                             <hr>
-                            <button id="shutdown-server-btn" class="btn-admin btn-danger" data-i18n="shutdownServerButton">Shutdown Server</button>
+                            <button id="shutdown-server-btn" class="btn-admin btn-danger" data-i18n="shutdownServerButton"><i class="fas fa-power-off"></i> Shutdown Server</button>
                         </div>
                     </div>
                 </div>

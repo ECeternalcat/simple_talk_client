@@ -152,6 +152,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         new_friend_request: (payload) => addFriendRequestToList(payload),
         friend_request_accepted: (payload) => {
             alert(t('friendRequestAccepted').replace('{username}', payload.from_username));
+            sendWsMessage('get_friend_list');
+            sendWsMessage('get_friend_requests');
         },
         friend_request_rejected: (payload) => {
             alert(t('friendRequestRejected').replace('{username}', payload.from_username));
@@ -323,10 +325,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const friendItem = e.target.closest('.friend-list-item');
 
         if (deleteBtn) {
-            const friendId = parseInt(deleteBtn.dataset.friendId, 10);
+            const friendId = parseInt(friendItem.dataset.friendId, 10);
             const friendUsername = friendItem.dataset.friendUsername;
             if (confirm(t('confirmRemoveFriend').replace('{username}', friendUsername))) {
                 sendWsMessage('delete_friend', { friendId });
+                friendItem.remove();
             }
         } else if (friendItem) {
             const friendId = parseInt(friendItem.dataset.friendId, 10);

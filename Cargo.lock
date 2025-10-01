@@ -1329,7 +1329,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "simple_call_client"
+name = "simple_talk_client"
 version = "0.1.0"
 dependencies = [
  "anyhow",

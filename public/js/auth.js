@@ -1,5 +1,5 @@
 import { showMessage } from './ui.js';
-import { initWebSocket, sendWsMessage } from './websocket.js';
+import { initWebSocket, sendWsMessage, getWebSocket } from './websocket.js';
 import { t } from './i18n.js';
 
 function handleAuth(action, handlers) {
@@ -16,9 +16,14 @@ function handleAuth(action, handlers) {
     
     const payload = { username, password };
 
-    initWebSocket(() => {
+    const ws = getWebSocket();
+    if (ws && ws.readyState === WebSocket.OPEN) {
         sendWsMessage(action, payload);
-    }, handlers);
+    } else {
+        initWebSocket(() => {
+            sendWsMessage(action, payload);
+        }, handlers);
+    }
 }
 
 export { handleAuth };

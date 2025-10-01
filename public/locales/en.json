@@ -1,5 +1,5 @@
 {
-    "appTitle": "Simple Voice Call",
+    "appTitle": "Simple Talk",
     "loginViewTitle": "Voice Call",
     "usernamePlaceholder": "Username",
     "passwordPlaceholder": "Password",
@@ -78,5 +78,7 @@
     "newPortPlaceholder": "Enter new port (e.g., 8080)",
     "changePortSuccess": "Port change command sent. Server will attempt to restart on the new port.",
     "changePortFail": "Failed to change port: {error}",
-    "invalidPort": "Invalid port number. Please enter a number between 1 and 65535."
+    "invalidPort": "Invalid port number. Please enter a number between 1 and 65535.",
+    "noFriendRequests": "No new friend requests.",
+    "noFriends": "You have no friends yet."
 }
